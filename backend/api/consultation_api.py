@@ -28,9 +28,10 @@ class ConsultationResponse(BaseModel):
     """診断レスポンス"""
     status: str
     message: str
-    results: Dict[str, Any]
+    results: Optional[Dict[str, Any]] = None
     need_input: bool
     applied_rule: Optional[str] = None
+    question: Optional[str] = None
 
 
 @router.post("/start", response_model=ConsultationResponse)
