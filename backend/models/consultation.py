@@ -48,13 +48,32 @@ class Consultation:
         Returns:
             推論結果
         """
-        # 競合集合が空かチェック
-        if not self.conflict_set:
-            result = self.deduce_first()
-        else:
-            result = self.deduce_second()
+        # 競合集合を生成
+        self.conflict_set = self._select_applicable_rules()
 
-        return result
+        # 実行可能なルールがある場合は実行
+        if self.conflict_set:
+            selected_rule = self.conflict_set[0]
+            return self.apply_rule(selected_rule)
+
+        # 実行可能なルールがない場合、次に必要な質問を探す
+        next_question = self._find_next_question()
+
+        if next_question:
+            return {
+                "status": "need_input",
+                "message": "次の質問に答えてください",
+                "question": next_question,
+                "need_input": True
+            }
+
+        # 質問もルールもない場合は推論完了
+        return {
+            "status": "completed",
+            "message": "推論が完了しました",
+            "results": dict(self.status.hypotheses),
+            "need_input": False
+        }
 
     def deduce_first(self) -> Dict[str, Any]:
         """
@@ -178,6 +197,27 @@ class Consultation:
             if not value:
                 return False
         return True
+
+    def _find_next_question(self) -> Optional[str]:
+        """
+        次に必要な質問を見つける
+
+        Returns:
+            次に尋ねるべき質問、なければ None
+        """
+        # すべてのルールの条件をチェック
+        for rule_name, rule in self.collection_of_rules.items():
+            # 既に発火したルールはスキップ
+            if rule.is_fired():
+                continue
+
+            # ルールの条件を確認
+            for condition in rule.conditions:
+                # まだ回答されていない（WorkingMemoryにない）質問を探す
+                if not self.status.has_key(condition):
+                    return condition
+
+        return None
 
     def reset(self) -> None:
         """

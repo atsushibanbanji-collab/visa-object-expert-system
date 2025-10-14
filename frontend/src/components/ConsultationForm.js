@@ -6,65 +6,25 @@ const ConsultationForm = () => {
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [results, setResults] = useState({});
-  const [currentAnswers, setCurrentAnswers] = useState({});
+  const [currentQuestion, setCurrentQuestion] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // すべての可能な質問をリスト化
-  const allQuestions = [
-    "申請者と会社の国籍が同じです",
-    "減価償却前の設備や建物が30万ドル以上財務諸表の資産に計上されています",
-    "30万ドル以上で企業を買収した会社か、買収された会社です",
-    "まだ十分な売り上げがなく、これまでに人件費などのランニングコストを含め、30万ドル以上支出しています",
-    "会社設立のために、30万ドル以上支出しました（不動産を除く）",
-    "会社の行う貿易の50％が日米間です",
-    "会社の行う貿易は継続的です",
-    "貿易による利益が会社の経費の80％以上をカバーしています",
-    "米国拠点でEビザでマネージャー以上として認められるポジションに就きます",
-    "CEOなどのオフィサーのポジションに就きます",
-    "経営企画のマネージャーなど、米国拠点の経営に関わるポジションに就きます",
-    "評価・雇用に責任を持つ複数のフルタイムのスタッフを部下に持つマネージャー以上のポジションに就きます",
-    "米国拠点のポジションの業務に深く関連する業務の経験が2年以上あります",
-    "2年以上のマネージャー経験があります",
-    "マネジメントが求められるプロジェクトマネージャーなどの2年以上の経験があります",
-    "理系の大学院卒で、米国拠点の技術系の業務に深く関連する3年以上の業務経験があります",
-    "理系の学部卒で、米国拠点の技術系の業務に深く関連する4年以上の業務経験があります",
-    "米国拠点の業務に深く関連する5年以上の業務経験があります",
-    "2年以内の期間で、目的を限定した派遣理由を説明できます",
-    "米国拠点の業務に深く関連する2年以上の業務経験があります",
-    "アメリカ以外からアメリカへのグループ内での異動です",
-    "アメリカにある子会社の売り上げの合計が25百万ドル以上です",
-    "アメリカにある子会社が1,000人以上ローカル採用をしています",
-    "1年間に10人以上Lビザのペティション申請をしています",
-    "直近3年のうち1年以上、アメリカ以外のグループ会社に所属していました",
-    "マネージャーとしての経験があります",
-    "アメリカでの業務はマネージャーとみなされます",
-    "アメリカでは大卒、フルタイムの部下が2名以上います",
-    "specialized knowledgeがあります",
-    "アメリカでの業務はspecialized knowledgeを必要とします",
-    "大卒以上で、専攻内容と業務内容が一致しています",
-    "大卒以上で、専攻内容と業務内容が異なりますが、実務経験が3年以上あります",
-    "大卒以上ではありませんが、実務経験が(高卒は12年以上、高専卒は3年以上）あります",
-    "アメリカでの活動は商用の範囲です",
-    "1回の滞在期間は90日を越えます",
-    "1回の滞在期間は6か月を越えません",
-    "アメリカの会社に販売した装置や設備のための作業をします",
-    "装置や設備の販売を示す契約書や発注書があります",
-    "H-1Bビザが必要な専門性の高い作業をします",
-    "研修にOJTが含まれます",
-    "研修期間は18か月以内です",
-    "申請者に研修に必要な英語力はあります",
-    "研修内容は商用の範囲です",
-    "研修期間は６か月以内です"
-  ];
+  const [questionHistory, setQuestionHistory] = useState([]);
 
   const handleStart = async () => {
     setLoading(true);
     try {
-      await axios.post('/api/consultation/start', {});
+      const response = await axios.post('/api/consultation/start', {});
       setStarted(true);
       setCompleted(false);
       setResults({});
-      setCurrentAnswers({});
+      setQuestionHistory([]);
+
+      if (response.data.status === 'need_input') {
+        setCurrentQuestion(response.data.question);
+      } else if (response.data.status === 'completed') {
+        setResults(response.data.results);
+        setCompleted(true);
+      }
     } catch (error) {
       console.error('診断の開始に失敗しました:', error);
       alert('診断の開始に失敗しました。もう一度お試しください。');
@@ -73,40 +33,26 @@ const ConsultationForm = () => {
     }
   };
 
-  const handleAnswerChange = (question, value) => {
-    setCurrentAnswers(prev => ({
-      ...prev,
-      [question]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleAnswer = async (answer) => {
     setLoading(true);
 
+    // 質問と回答を履歴に追加
+    setQuestionHistory(prev => [...prev, { question: currentQuestion, answer }]);
+
     try {
-      // すべての回答をバックエンドに送信
-      for (const [key, value] of Object.entries(currentAnswers)) {
-        const response = await axios.post('/api/consultation/answer', {
-          key,
-          value
-        });
+      // 回答をバックエンドに送信
+      const response = await axios.post('/api/consultation/answer', {
+        key: currentQuestion,
+        value: answer
+      });
 
-        // 推論が完了した場合
-        if (response.data.status === 'completed') {
-          setResults(response.data.results);
-          setCompleted(true);
-          break;
-        }
-      }
-
-      // まだ完了していない場合、statusを確認
-      if (!completed) {
-        const statusResponse = await axios.get('/api/consultation/status');
-        if (Object.keys(statusResponse.data.hypotheses).length > 0) {
-          setResults(statusResponse.data.hypotheses);
-          setCompleted(true);
-        }
+      // 次の質問または結果を処理
+      if (response.data.status === 'need_input') {
+        setCurrentQuestion(response.data.question);
+      } else if (response.data.status === 'completed') {
+        setResults(response.data.results);
+        setCompleted(true);
+        setCurrentQuestion('');
       }
     } catch (error) {
       console.error('回答の送信に失敗しました:', error);
@@ -123,7 +69,8 @@ const ConsultationForm = () => {
       setStarted(false);
       setCompleted(false);
       setResults({});
-      setCurrentAnswers({});
+      setCurrentQuestion('');
+      setQuestionHistory([]);
     } catch (error) {
       console.error('リセットに失敗しました:', error);
       alert('リセットに失敗しました。もう一度お試しください。');
@@ -132,6 +79,7 @@ const ConsultationForm = () => {
     }
   };
 
+  // 開始画面
   if (!started) {
     return (
       <div className="consultation-container">
@@ -142,6 +90,9 @@ const ConsultationForm = () => {
           </p>
           <p>
             いくつかの質問に「はい」または「いいえ」で答えてください。
+          </p>
+          <p className="note">
+            ※ 最小限の質問数で診断を行います
           </p>
           <button
             className="btn btn-primary btn-large"
@@ -155,6 +106,7 @@ const ConsultationForm = () => {
     );
   }
 
+  // 結果画面
   if (completed) {
     const visaResults = Object.entries(results).filter(([key]) =>
       key.includes('ビザでの申請ができます') || key.includes('ビザの申請ができます')
@@ -164,6 +116,14 @@ const ConsultationForm = () => {
       <div className="consultation-container">
         <div className="result-card">
           <h2>診断結果</h2>
+
+          {/* 質問履歴サマリー */}
+          <div className="summary-section">
+            <p className="summary-text">
+              <strong>{questionHistory.length}個</strong>の質問に回答しました
+            </p>
+          </div>
+
           {visaResults.length > 0 ? (
             <>
               <p className="result-intro">以下のビザ申請が可能です：</p>
@@ -171,7 +131,7 @@ const ConsultationForm = () => {
                 {visaResults.map(([visa], index) => (
                   <li key={index} className="visa-item">
                     <span className="visa-icon">✓</span>
-                    {visa}
+                    <span className="visa-text">{visa}</span>
                   </li>
                 ))}
               </ul>
@@ -182,6 +142,24 @@ const ConsultationForm = () => {
               条件を見直すか、専門家にご相談ください。
             </p>
           )}
+
+          {/* 回答履歴の詳細 */}
+          {questionHistory.length > 0 && (
+            <details className="history-details">
+              <summary className="history-summary">回答履歴を表示</summary>
+              <div className="history-list">
+                {questionHistory.map((item, index) => (
+                  <div key={index} className="history-item">
+                    <div className="history-question">Q{index + 1}: {item.question}</div>
+                    <div className={`history-answer ${item.answer ? 'yes' : 'no'}`}>
+                      A: {item.answer ? 'はい' : 'いいえ'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+
           <div className="result-actions">
             <button
               className="btn btn-secondary"
@@ -196,63 +174,55 @@ const ConsultationForm = () => {
     );
   }
 
+  // 質問画面
   return (
     <div className="consultation-container">
       <div className="question-card">
-        <h2>質問に答えてください</h2>
-        <p className="question-intro">
-          該当する項目すべてに「はい」を選択してください。
-        </p>
-        <form onSubmit={handleSubmit}>
-          <div className="questions-list">
-            {allQuestions.map((question, index) => (
-              <div key={index} className="question-item">
-                <label className="question-label">
-                  <span className="question-text">{question}</span>
-                  <div className="question-options">
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name={question}
-                        value="true"
-                        checked={currentAnswers[question] === true}
-                        onChange={() => handleAnswerChange(question, true)}
-                      />
-                      <span>はい</span>
-                    </label>
-                    <label className="radio-label">
-                      <input
-                        type="radio"
-                        name={question}
-                        value="false"
-                        checked={currentAnswers[question] === false}
-                        onChange={() => handleAnswerChange(question, false)}
-                      />
-                      <span>いいえ</span>
-                    </label>
-                  </div>
-                </label>
-              </div>
-            ))}
+        <div className="progress-indicator">
+          <span className="progress-count">質問 {questionHistory.length + 1}</span>
+        </div>
+
+        <h2>{currentQuestion}</h2>
+
+        <div className="answer-buttons">
+          <button
+            className="btn btn-answer btn-yes"
+            onClick={() => handleAnswer(true)}
+            disabled={loading}
+          >
+            はい
+          </button>
+          <button
+            className="btn btn-answer btn-no"
+            onClick={() => handleAnswer(false)}
+            disabled={loading}
+          >
+            いいえ
+          </button>
+        </div>
+
+        {loading && (
+          <div className="loading-message">
+            推論中...
           </div>
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading || Object.keys(currentAnswers).length === 0}
-            >
-              {loading ? '診断中...' : '診断結果を見る'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleReset}
-              disabled={loading}
-            >
-              リセット
-            </button>
+        )}
+
+        {/* 回答済み質問の数を表示 */}
+        {questionHistory.length > 0 && (
+          <div className="answered-count">
+            これまでに {questionHistory.length} 個の質問に回答しました
           </div>
-        </form>
+        )}
+
+        <div className="form-actions">
+          <button
+            className="btn btn-secondary btn-small"
+            onClick={handleReset}
+            disabled={loading}
+          >
+            最初から
+          </button>
+        </div>
       </div>
     </div>
   );
