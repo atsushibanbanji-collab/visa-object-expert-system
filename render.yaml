@@ -10,10 +10,10 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
 
-  # フロントエンド（React）
+  # フロントエンド（React）- 静的サイトとして配信
   - type: web
     name: visa-expert-frontend
-    env: node
+    env: static
     region: oregon
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/build
