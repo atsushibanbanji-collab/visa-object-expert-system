@@ -146,7 +146,8 @@ def get_all_questions():
                 "name": rule.name,
                 "type": rule.type,
                 "conditions": rule.conditions,
-                "actions": rule.actions
+                "actions": rule.actions,
+                "condition_logic": rule.condition_logic
             }
             rules_data.append(rule_data)
             all_conditions.update(rule.conditions)

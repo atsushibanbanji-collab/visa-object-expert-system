@@ -44,7 +44,8 @@ class VisaRule2(Rule):
                 "会社がEビザの貿易の条件を満たします"
             ],
             actions=["会社がEビザの条件を満たします"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -70,7 +71,8 @@ class VisaRule3(Rule):
                 "会社設立のために、30万ドル以上支出しました（不動産を除く）"
             ],
             actions=["会社がEビザの投資の条件を満たします"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -123,7 +125,8 @@ class VisaRule5(Rule):
                 "EビザTDY(short-term needs)の条件を満たします"
             ],
             actions=["申請者がEビザの条件を満たします"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -173,7 +176,8 @@ class VisaRule7(Rule):
                 "評価・雇用に責任を持つ複数のフルタイムのスタッフを部下に持つマネージャー以上のポジションに就きます"
             ],
             actions=["米国拠点でEビザでマネージャー以上として認められるポジションに就きます"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -222,7 +226,8 @@ class VisaRule9(Rule):
                 "マネジメントが求められるプロジェクトマネージャーなどの2年以上の経験があります"
             ],
             actions=["マネジメント経験が2年以上あります"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -247,7 +252,8 @@ class VisaRule10(Rule):
                 "米国拠点の業務に深く関連する5年以上の業務経験があります"
             ],
             actions=["申請者がEビザのスタッフの条件を満たします"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -323,7 +329,8 @@ class VisaRule13(Rule):
                 "1年間に10人以上Lビザのペティション申請をしています"
             ],
             actions=["会社がBlanket Lビザの条件を満たします"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -372,7 +379,8 @@ class VisaRule15(Rule):
                 "Blanket Lビザスタッフの条件を満たします"
             ],
             actions=["Blanket Lビザのマネージャーまたはスタッフの条件を満たします"],
-            rule_type="#i"
+            rule_type="#i",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -543,7 +551,8 @@ class VisaRule22(Rule):
                 "大卒以上ではありませんが、実務経験が(高卒は12年以上、高専卒は3年以上）あります"
             ],
             actions=["H-1Bビザでの申請ができます"],
-            rule_type="#n!"
+            rule_type="#n!",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -568,7 +577,8 @@ class VisaRule23(Rule):
                 "Bビザの申請条件を満たす（ESTAの認証は通らない）"
             ],
             actions=["Bビザの申請ができます"],
-            rule_type="#n!"
+            rule_type="#n!",
+            condition_logic="OR"
         )
 
     def check_conditions(self, working_memory) -> bool:

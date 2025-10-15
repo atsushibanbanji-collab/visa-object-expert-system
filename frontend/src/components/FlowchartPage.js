@@ -59,9 +59,14 @@ const FlowchartPage = ({ onBack }) => {
         <div className={`rule-card ${rule.type}`}>
           <div className="rule-header">
             <span className="rule-name">ルール {rule.name}</span>
-            <span className={`rule-badge ${rule.type}`}>
-              {rule.type === '#n!' ? '終了' : '中間'}
-            </span>
+            <div className="rule-badges">
+              <span className={`rule-badge ${rule.type}`}>
+                {rule.type === '#n!' ? '終了' : '中間'}
+              </span>
+              <span className={`rule-badge logic-badge ${rule.condition_logic}`}>
+                {rule.condition_logic}
+              </span>
+            </div>
           </div>
           <div className="rule-body">
             <div className="rule-section-flow">
@@ -168,6 +173,14 @@ const FlowchartPage = ({ onBack }) => {
               <div className="legend-item">
                 <span className="legend-badge intermediate">中間</span>
                 <span>中間ルール（条件を推論）</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-badge logic and">AND</span>
+                <span>すべての条件を満たす必要がある</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-badge logic or">OR</span>
+                <span>いずれか1つの条件を満たせばよい</span>
               </div>
             </div>
           </div>

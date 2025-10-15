@@ -105,6 +105,12 @@
   color: #2d3748;
 }
 
+.rule-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .rule-badge {
   padding: 0.35rem 0.85rem;
   border-radius: 20px;
@@ -122,6 +128,21 @@
 .rule-badge.\#i {
   background: #90cdf4;
   color: #2c5282;
+}
+
+.rule-badge.logic-badge {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.75rem;
+}
+
+.rule-badge.logic-badge.AND {
+  background: #68d391;
+  color: #22543d;
+}
+
+.rule-badge.logic-badge.OR {
+  background: #f6ad55;
+  color: #7c2d12;
 }
 
 .rule-body {
@@ -246,6 +267,16 @@
 .legend-badge.intermediate {
   background: #90cdf4;
   color: #2c5282;
+}
+
+.legend-badge.logic.and {
+  background: #68d391;
+  color: #22543d;
+}
+
+.legend-badge.logic.or {
+  background: #f6ad55;
+  color: #7c2d12;
 }
 
 .legend-item span:last-child {
