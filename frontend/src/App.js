@@ -2,9 +2,23 @@ import React, { useState } from 'react';
 import './App.css';
 import ConsultationForm from './components/ConsultationForm';
 import QuestionsPage from './components/QuestionsPage';
+import FlowchartPage from './components/FlowchartPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('consultation');
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'consultation':
+        return <ConsultationForm />;
+      case 'questions':
+        return <QuestionsPage onBack={() => setCurrentPage('consultation')} />;
+      case 'flowchart':
+        return <FlowchartPage onBack={() => setCurrentPage('consultation')} />;
+      default:
+        return <ConsultationForm />;
+    }
+  };
 
   return (
     <div className="App">
@@ -24,14 +38,16 @@ function App() {
           >
             質問一覧
           </button>
+          <button
+            className={`nav-btn ${currentPage === 'flowchart' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('flowchart')}
+          >
+            フローチャート
+          </button>
         </nav>
       </header>
       <main className="App-main">
-        {currentPage === 'consultation' ? (
-          <ConsultationForm />
-        ) : (
-          <QuestionsPage onBack={() => setCurrentPage('consultation')} />
-        )}
+        {renderPage()}
       </main>
     </div>
   );
