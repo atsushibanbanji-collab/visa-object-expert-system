@@ -201,10 +201,16 @@ class Consultation:
     def _find_next_question(self) -> Optional[str]:
         """
         次に必要な質問を見つける
+        他のルールから導出できる仮説は質問せず、基本的な事実のみを質問する
 
         Returns:
             次に尋ねるべき質問、なければ None
         """
+        # すべてのルールのアクション（導出可能な仮説）を収集
+        derivable_hypotheses = set()
+        for rule in self.collection_of_rules.values():
+            derivable_hypotheses.update(rule.actions)
+
         # すべてのルールの条件をチェック
         for rule_name, rule in self.collection_of_rules.items():
             # 既に発火したルールはスキップ
@@ -215,7 +221,9 @@ class Consultation:
             for condition in rule.conditions:
                 # まだ回答されていない（WorkingMemoryにない）質問を探す
                 if not self.status.has_key(condition):
-                    return condition
+                    # 他のルールから導出できる仮説は質問しない
+                    if condition not in derivable_hypotheses:
+                        return condition
 
         return None
 
