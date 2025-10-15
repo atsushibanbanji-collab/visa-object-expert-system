@@ -203,10 +203,62 @@ class Consultation:
                 return False
         return True
 
+    def _get_rules_that_need_hypothesis(self, hypothesis: str) -> List:
+        """
+        指定された仮説を条件として必要とするルールを取得
+
+        Args:
+            hypothesis: 仮説（ルールのアクション）
+
+        Returns:
+            この仮説を条件とするルールのリスト
+        """
+        rules_needing_hypothesis = []
+        for rule in self.collection_of_rules.values():
+            if rule.is_fired():
+                continue
+            if hypothesis in rule.conditions:
+                rules_needing_hypothesis.append(rule)
+        return rules_needing_hypothesis
+
+    def _is_hypothesis_needed(self, hypothesis: str) -> bool:
+        """
+        この仮説が必要かどうかを再帰的にチェック
+        この仮説を使うルールのいずれかが満たされていない場合、必要
+
+        Args:
+            hypothesis: チェックする仮説
+
+        Returns:
+            仮説が必要な場合 True、不要な場合 False
+        """
+        # この仮説を条件として使うルールを探す
+        dependent_rules = self._get_rules_that_need_hypothesis(hypothesis)
+
+        # 依存するルールがない場合、この仮説は不要
+        if not dependent_rules:
+            return False
+
+        # いずれかの依存ルールが満たされていないかチェック
+        for rule in dependent_rules:
+            # このルールが既に満たされているかチェック
+            if not rule.check_conditions(self.status):
+                # まだ満たされていない
+                # このルールのアクションが更に必要とされているかチェック
+                for action in rule.actions:
+                    if self._is_hypothesis_needed(action):
+                        return True
+                # このルールのアクションが不要でも、ルール自体が終了ルールなら必要
+                if rule.type == "#n!":
+                    return True
+
+        # すべての依存ルールが既に満たされている
+        return False
+
     def _is_question_necessary(self, condition: str) -> bool:
         """
         この質問が本当に必要かチェック
-        この条件を含むルールが既に満たされている場合、質問は不要
+        この質問を含むルール、およびその結果を使うルールをチェック
 
         Args:
             condition: チェックする条件
@@ -223,14 +275,17 @@ class Consultation:
                 continue
 
             # このルールが既に満たされているかチェック
-            if rule.check_conditions(self.status):
-                # 既に満たされている = この質問はこのルールには不要
-                continue
-            else:
-                # まだ満たされていない = この質問は必要
-                return True
+            if not rule.check_conditions(self.status):
+                # まだ満たされていない
+                # このルールのアクション（仮説）が必要とされているかチェック
+                for action in rule.actions:
+                    if self._is_hypothesis_needed(action):
+                        return True
+                # アクションが不要でも、ルール自体が終了ルールなら必要
+                if rule.type == "#n!":
+                    return True
 
-        # すべてのルールで既に満たされている or 該当ルールがない
+        # すべてのルールで不要
         return False
 
     def _check_if_impossible(self) -> Optional[Dict[str, Any]]:
