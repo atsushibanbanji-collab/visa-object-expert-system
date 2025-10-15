@@ -88,6 +88,49 @@
   font-style: italic;
 }
 
+/* ビザ選択画面のスタイル */
+.visa-selection {
+  display: flex;
+  gap: 1.5rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-visa {
+  flex: 1;
+  min-width: 200px;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(135deg, #ebf8ff 0%, #e6f2ff 100%);
+  border: 2px solid #bee3f8;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-visa:hover:not(:disabled) {
+  background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+  border-color: #2c5282;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(44, 82, 130, 0.2);
+}
+
+.visa-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c5282;
+}
+
+.visa-description {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
 /* 質問画面のスタイル */
 .progress-indicator {
   text-align: center;
@@ -366,6 +409,66 @@
   font-size: 1.5rem;
   color: #2c5282;
   font-weight: bold;
+}
+
+/* 申請可能結果のスタイル */
+.success-result {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  border: 2px solid #48bb78;
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: #22543d;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.success-result h3 {
+  color: #22543d;
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+/* 申請不可結果のスタイル */
+.impossible-result {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  border: 2px solid #fc8181;
+}
+
+.impossible-icon {
+  font-size: 4rem;
+  color: #742a2a;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.impossible-result h3 {
+  color: #742a2a;
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+.impossible-message {
+  padding: 1.5rem;
+  text-align: center;
+  color: #742a2a;
+  background: #fff5f5;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid #fed7d7;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .no-result {

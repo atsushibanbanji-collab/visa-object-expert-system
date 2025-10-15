@@ -770,3 +770,37 @@ def get_all_visa_rules():
         VisaRule21(), VisaRule22(), VisaRule23(), VisaRule24(), VisaRule25(),
         VisaRule26(), VisaRule27(), VisaRule28(), VisaRule29(), VisaRule30()
     ]
+
+
+def get_rules_by_visa_type(visa_type: str):
+    """
+    指定されたビザタイプに関連するルールのみを取得
+
+    Args:
+        visa_type: ビザタイプ（"E", "L", "B"）
+
+    Returns:
+        指定されたビザタイプに関連するルールのリスト
+    """
+    if visa_type == "E":
+        # Eビザ関連: ルール1-11
+        return [
+            VisaRule1(), VisaRule2(), VisaRule3(), VisaRule4(), VisaRule5(),
+            VisaRule6(), VisaRule7(), VisaRule8(), VisaRule9(), VisaRule10(),
+            VisaRule11()
+        ]
+    elif visa_type == "L":
+        # Lビザ関連: ルール12-21
+        return [
+            VisaRule12(), VisaRule13(), VisaRule14(), VisaRule15(), VisaRule16(),
+            VisaRule17(), VisaRule18(), VisaRule19(), VisaRule20(), VisaRule21()
+        ]
+    elif visa_type == "B":
+        # Bビザ関連: ルール23-27, 29-30
+        return [
+            VisaRule23(), VisaRule24(), VisaRule25(), VisaRule26(), VisaRule27(),
+            VisaRule29(), VisaRule30()
+        ]
+    else:
+        # デフォルトは全ルール
+        return get_all_visa_rules()

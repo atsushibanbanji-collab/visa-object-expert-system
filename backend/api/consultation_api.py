@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from backend.models.consultation import Consultation
-from backend.rules.visa_rules import get_all_visa_rules
+from backend.rules.visa_rules import get_rules_by_visa_type
 
 router = APIRouter(prefix="/api/consultation", tags=["consultation"])
 
@@ -15,7 +15,7 @@ consultation_session: Optional[Consultation] = None
 
 class StartRequest(BaseModel):
     """診断開始リクエスト"""
-    pass
+    visa_type: str  # "E", "L", "B"
 
 
 class AnswerRequest(BaseModel):
@@ -39,13 +39,16 @@ def start_consultation(request: StartRequest):
     """
     新しい診断セッションを開始
 
+    Args:
+        request: visa_type を含む開始リクエスト
+
     Returns:
         診断開始レスポンス
     """
     global consultation_session
 
-    # ルールを取得
-    rules = get_all_visa_rules()
+    # 選択されたビザタイプのルールのみを取得
+    rules = get_rules_by_visa_type(request.visa_type)
 
     # 新しい診断セッションを作成
     consultation_session = Consultation(rules)

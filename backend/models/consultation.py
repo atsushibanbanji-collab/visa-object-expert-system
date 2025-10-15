@@ -48,6 +48,11 @@ class Consultation:
         Returns:
             推論結果
         """
+        # 否定的推論: 申請不可の判定
+        impossibility_result = self._check_if_impossible()
+        if impossibility_result:
+            return impossibility_result
+
         # 競合集合を生成
         self.conflict_set = self._select_applicable_rules()
 
@@ -227,6 +232,43 @@ class Consultation:
 
         # すべてのルールで既に満たされている or 該当ルールがない
         return False
+
+    def _check_if_impossible(self) -> Optional[Dict[str, Any]]:
+        """
+        否定的推論: 申請が不可能かどうかをチェック
+        終了ルール（#n!）が絶対に適用できない場合、申請不可と判定
+
+        Returns:
+            申請不可の場合は結果辞書、そうでない場合は None
+        """
+        # 終了ルール（#n!）を探す
+        terminal_rules = [rule for rule in self.collection_of_rules.values() if rule.type == "#n!"]
+
+        for rule in terminal_rules:
+            # このルールが既に発火済みならスキップ
+            if rule.is_fired():
+                continue
+
+            # ルールの条件をチェック
+            can_be_satisfied = True
+            for condition in rule.conditions:
+                value = self.status.get_value(condition)
+
+                # 条件が明示的に False の場合
+                if value is False:
+                    can_be_satisfied = False
+                    break
+
+            # このルールが絶対に適用できないと判明した場合
+            if not can_be_satisfied:
+                return {
+                    "status": "impossible",
+                    "message": "現在の条件では申請ができません",
+                    "results": {},
+                    "need_input": False
+                }
+
+        return None
 
     def _find_next_question(self) -> Optional[str]:
         """

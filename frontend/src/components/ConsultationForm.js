@@ -3,19 +3,25 @@ import axios from 'axios';
 import './ConsultationForm.css';
 
 const ConsultationForm = () => {
+  const [selectedVisaType, setSelectedVisaType] = useState('');
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [results, setResults] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [questionHistory, setQuestionHistory] = useState([]);
+  const [impossible, setImpossible] = useState(false);
 
-  const handleStart = async () => {
+  const handleStart = async (visaType) => {
     setLoading(true);
     try {
-      const response = await axios.post('/api/consultation/start', {});
+      const response = await axios.post('/api/consultation/start', {
+        visa_type: visaType
+      });
+      setSelectedVisaType(visaType);
       setStarted(true);
       setCompleted(false);
+      setImpossible(false);
       setResults({});
       setQuestionHistory([]);
 
@@ -23,6 +29,9 @@ const ConsultationForm = () => {
         setCurrentQuestion(response.data.question);
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
+        setCompleted(true);
+      } else if (response.data.status === 'impossible') {
+        setImpossible(true);
         setCompleted(true);
       }
     } catch (error) {
@@ -53,6 +62,10 @@ const ConsultationForm = () => {
         setResults(response.data.results);
         setCompleted(true);
         setCurrentQuestion('');
+      } else if (response.data.status === 'impossible') {
+        setImpossible(true);
+        setCompleted(true);
+        setCurrentQuestion('');
       }
     } catch (error) {
       console.error('回答の送信に失敗しました:', error);
@@ -66,8 +79,10 @@ const ConsultationForm = () => {
     setLoading(true);
     try {
       await axios.post('/api/consultation/reset');
+      setSelectedVisaType('');
       setStarted(false);
       setCompleted(false);
+      setImpossible(false);
       setResults({});
       setCurrentQuestion('');
       setQuestionHistory([]);
@@ -79,28 +94,50 @@ const ConsultationForm = () => {
     }
   };
 
-  // 開始画面
+  // ビザ選択画面
   if (!started) {
     return (
       <div className="consultation-container">
         <div className="welcome-card">
-          <h2>ビザ診断を開始します</h2>
+          <h2>診断するビザを選択してください</h2>
           <p>
-            このエキスパートシステムは、あなたの状況に基づいて最適な米国ビザの種類を診断します。
-          </p>
-          <p>
-            いくつかの質問に「はい」または「いいえ」で答えてください。
+            いくつかの質問に「はい」または「いいえ」で答えることで、
+            選択したビザの申請可否を診断します。
           </p>
           <p className="note">
             ※ 最小限の質問数で診断を行います
           </p>
-          <button
-            className="btn btn-primary btn-large"
-            onClick={handleStart}
-            disabled={loading}
-          >
-            {loading ? '開始中...' : '診断を開始'}
-          </button>
+
+          <div className="visa-selection">
+            <button
+              className="btn btn-visa"
+              onClick={() => handleStart('E')}
+              disabled={loading}
+            >
+              <div className="visa-title">Eビザ</div>
+              <div className="visa-description">投資家・貿易駐在員</div>
+            </button>
+
+            <button
+              className="btn btn-visa"
+              onClick={() => handleStart('L')}
+              disabled={loading}
+            >
+              <div className="visa-title">Lビザ</div>
+              <div className="visa-description">企業内転勤者</div>
+            </button>
+
+            <button
+              className="btn btn-visa"
+              onClick={() => handleStart('B')}
+              disabled={loading}
+            >
+              <div className="visa-title">Bビザ</div>
+              <div className="visa-description">商用・観光</div>
+            </button>
+          </div>
+
+          {loading && <div className="loading-message">診断を開始しています...</div>}
         </div>
       </div>
     );
@@ -112,6 +149,12 @@ const ConsultationForm = () => {
       key.includes('ビザでの申請ができます') || key.includes('ビザの申請ができます')
     );
 
+    const visaTypeNames = {
+      'E': 'Eビザ',
+      'L': 'Lビザ',
+      'B': 'Bビザ'
+    };
+
     return (
       <div className="consultation-container">
         <div className="result-card">
@@ -120,12 +163,28 @@ const ConsultationForm = () => {
           {/* 質問履歴サマリー */}
           <div className="summary-section">
             <p className="summary-text">
+              <strong>{visaTypeNames[selectedVisaType]}</strong>の診断で、
               <strong>{questionHistory.length}個</strong>の質問に回答しました
             </p>
           </div>
 
-          {visaResults.length > 0 ? (
+          {impossible ? (
             <>
+              <div className="impossible-result">
+                <span className="impossible-icon">✗</span>
+                <h3>申請できません</h3>
+              </div>
+              <p className="impossible-message">
+                現在の条件では、{visaTypeNames[selectedVisaType]}の申請ができません。
+                他のビザタイプを試すか、専門家にご相談ください。
+              </p>
+            </>
+          ) : visaResults.length > 0 ? (
+            <>
+              <div className="success-result">
+                <span className="success-icon">✓</span>
+                <h3>申請可能です</h3>
+              </div>
               <p className="result-intro">以下のビザ申請が可能です：</p>
               <ul className="visa-list">
                 {visaResults.map(([visa], index) => (
