@@ -198,10 +198,46 @@ class Consultation:
                 return False
         return True
 
+    def _is_question_necessary(self, condition: str) -> bool:
+        """
+        この質問が本当に必要かチェック
+        OR条件で他の条件が既に満たされている場合、この質問は不要
+
+        Args:
+            condition: チェックする条件
+
+        Returns:
+            質問が必要な場合 True、不要な場合 False
+        """
+        # この条件を含むルールをチェック
+        for rule in self.collection_of_rules.values():
+            if rule.is_fired():
+                continue
+
+            if condition not in rule.conditions:
+                continue
+
+            # この条件を False として一時的に設定
+            self.status.set_finding(condition, False)
+
+            # ルールが満たされるかチェック（OR条件で他が True なら満たされる）
+            is_satisfied_without = rule.check_conditions(self.status)
+
+            # 元に戻す（削除）
+            del self.status.findings[condition]
+
+            # この条件が False でもルールが満たされない = この質問は必要
+            if not is_satisfied_without:
+                return True
+
+        # どのルールでも不要（OR条件で他が既に満たされている）
+        return False
+
     def _find_next_question(self) -> Optional[str]:
         """
         次に必要な質問を見つける
         他のルールから導出できる仮説は質問せず、基本的な事実のみを質問する
+        OR条件で他の条件が既に満たされている場合も質問しない
 
         Returns:
             次に尋ねるべき質問、なければ None
@@ -223,7 +259,9 @@ class Consultation:
                 if not self.status.has_key(condition):
                     # 他のルールから導出できる仮説は質問しない
                     if condition not in derivable_hypotheses:
-                        return condition
+                        # OR条件で他の条件が既に満たされている場合も質問しない
+                        if self._is_question_necessary(condition):
+                            return condition
 
         return None
 
