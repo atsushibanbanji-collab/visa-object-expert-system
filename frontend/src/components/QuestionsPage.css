@@ -1,0 +1,274 @@
+.questions-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.questions-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.questions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.questions-header h1 {
+  margin: 0;
+  color: #1a365d;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.btn-back {
+  margin: 0;
+}
+
+.visa-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.visa-tab {
+  padding: 1rem 2rem;
+  border: none;
+  background: transparent;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.visa-tab:hover {
+  color: #2c5282;
+  background: #f7fafc;
+}
+
+.visa-tab.active {
+  color: #2c5282;
+  border-bottom-color: #2c5282;
+}
+
+.questions-content h2 {
+  color: #2c5282;
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.stats {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #ebf8ff 0%, #e6f2ff 100%);
+  border-radius: 12px;
+  border: 2px solid #bee3f8;
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #2c5282;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+.section {
+  margin: 3rem 0;
+}
+
+.section h3 {
+  color: #2d3748;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.questions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.question-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 0.75rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 4px solid #2c5282;
+  transition: all 0.2s ease;
+}
+
+.question-list-item:hover {
+  background: #edf2f7;
+  transform: translateX(4px);
+}
+
+.question-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  background: #2c5282;
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.question-text {
+  flex: 1;
+  color: #2d3748;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rule-item {
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.rule-summary {
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2d3748;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.rule-summary:hover {
+  background: #edf2f7;
+}
+
+.rule-type {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.rule-type.\#i {
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.rule-type.\#n\! {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.rule-details {
+  padding: 1.5rem;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+.rule-section {
+  margin-bottom: 1.5rem;
+}
+
+.rule-section:last-child {
+  margin-bottom: 0;
+}
+
+.rule-section h4 {
+  color: #2c5282;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.rule-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.rule-section li {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: #f7fafc;
+  border-left: 3px solid #2c5282;
+  border-radius: 4px;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .questions-container {
+    padding: 1rem;
+  }
+
+  .questions-card {
+    padding: 1.5rem;
+  }
+
+  .questions-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .visa-tabs {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .visa-tab {
+    border-bottom: 1px solid #e2e8f0;
+    border-left: 3px solid transparent;
+  }
+
+  .visa-tab.active {
+    border-left-color: #2c5282;
+    border-bottom-color: #e2e8f0;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

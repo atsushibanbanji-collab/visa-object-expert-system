@@ -117,3 +117,44 @@ def reset_consultation():
         consultation_session.reset()
 
     return {"message": "診断がリセットされました"}
+
+
+@router.get("/questions")
+def get_all_questions():
+    """
+    各ビザタイプの質問一覧を取得
+
+    Returns:
+        ビザタイプごとのルールと質問のリスト
+    """
+    visa_types = {
+        "E": "Eビザ（投資家・貿易駐在員）",
+        "L": "Lビザ（企業内転勤者）",
+        "B": "Bビザ（商用・観光）"
+    }
+
+    result = {}
+
+    for visa_type, visa_name in visa_types.items():
+        rules = get_rules_by_visa_type(visa_type)
+
+        rules_data = []
+        all_conditions = set()
+
+        for rule in rules:
+            rule_data = {
+                "name": rule.name,
+                "type": rule.type,
+                "conditions": rule.conditions,
+                "actions": rule.actions
+            }
+            rules_data.append(rule_data)
+            all_conditions.update(rule.conditions)
+
+        result[visa_type] = {
+            "name": visa_name,
+            "rules": rules_data,
+            "all_questions": sorted(list(all_conditions))
+        }
+
+    return result
