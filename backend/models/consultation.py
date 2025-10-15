@@ -201,7 +201,7 @@ class Consultation:
     def _is_question_necessary(self, condition: str) -> bool:
         """
         この質問が本当に必要かチェック
-        OR条件で他の条件が既に満たされている場合、この質問は不要
+        この条件を含むルールが既に満たされている場合、質問は不要
 
         Args:
             condition: チェックする条件
@@ -217,20 +217,15 @@ class Consultation:
             if condition not in rule.conditions:
                 continue
 
-            # この条件を False として一時的に設定
-            self.status.set_finding(condition, False)
-
-            # ルールが満たされるかチェック（OR条件で他が True なら満たされる）
-            is_satisfied_without = rule.check_conditions(self.status)
-
-            # 元に戻す（削除）
-            del self.status.findings[condition]
-
-            # この条件が False でもルールが満たされない = この質問は必要
-            if not is_satisfied_without:
+            # このルールが既に満たされているかチェック
+            if rule.check_conditions(self.status):
+                # 既に満たされている = この質問はこのルールには不要
+                continue
+            else:
+                # まだ満たされていない = この質問は必要
                 return True
 
-        # どのルールでも不要（OR条件で他が既に満たされている）
+        # すべてのルールで既に満たされている or 該当ルールがない
         return False
 
     def _find_next_question(self) -> Optional[str]:
