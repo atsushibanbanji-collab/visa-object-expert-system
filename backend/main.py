@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.consultation_api import router as consultation_router
+from backend.rules.visa_rules import get_rules_by_visa_type
 
 app = FastAPI(title="Visa Expert System API")
 
@@ -13,7 +14,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# APIルーターを登録
+# ルールキャッシュ：アプリ起動時に全ビザタイプのルールを事前生成
+print("🚀 Initializing rules cache...")
+RULES_CACHE = {
+    "E": get_rules_by_visa_type("E"),
+    "L": get_rules_by_visa_type("L"),
+    "B": get_rules_by_visa_type("B"),
+}
+print(f"✅ Rules cache initialized: E={len(RULES_CACHE['E'])} rules, L={len(RULES_CACHE['L'])} rules, B={len(RULES_CACHE['B'])} rules")
+
+# APIルーターを登録（ルールキャッシュを渡す）
 app.include_router(consultation_router)
 
 @app.get("/")

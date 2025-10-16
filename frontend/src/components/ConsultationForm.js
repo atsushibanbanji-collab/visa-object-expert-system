@@ -141,7 +141,13 @@ const ConsultationForm = () => {
             </button>
           </div>
 
-          {loading && <div className="loading-message">診断を開始しています...</div>}
+          {loading && (
+            <div className="loading-message">
+              <div className="loading-spinner"></div>
+              <p>診断を準備しています...</p>
+              <p className="loading-hint">※ 初回起動時は30秒ほどかかる場合があります</p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -318,7 +324,8 @@ const ConsultationForm = () => {
 
         {loading && (
           <div className="loading-message">
-            推論中...
+            <div className="loading-spinner"></div>
+            <p>推論中...</p>
           </div>
         )}
 

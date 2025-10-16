@@ -48,8 +48,14 @@ def start_consultation(request: StartRequest):
     """
     global consultation_session
 
-    # 選択されたビザタイプのルールのみを取得
-    rules = get_rules_by_visa_type(request.visa_type)
+    # main.py のキャッシュからルールを取得（高速化）
+    from backend.main import RULES_CACHE
+
+    # キャッシュに存在しない場合は動的に生成（フォールバック）
+    if request.visa_type in RULES_CACHE:
+        rules = RULES_CACHE[request.visa_type]
+    else:
+        rules = get_rules_by_visa_type(request.visa_type)
 
     # 新しい診断セッションを作成
     consultation_session = Consultation(rules)
