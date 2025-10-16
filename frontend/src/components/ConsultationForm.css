@@ -486,6 +486,175 @@
   text-align: center;
 }
 
+/* 推論過程表示のスタイル */
+.inference-details {
+  margin-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.inference-summary {
+  cursor: pointer;
+  color: #2c5282;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #f7fafc 0%, #ebf8ff 100%);
+  border-radius: 6px;
+  transition: background 0.2s;
+  border: 1px solid #bee3f8;
+}
+
+.inference-summary:hover {
+  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+}
+
+.inference-list {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inference-item {
+  background: white;
+  border: 2px solid #bee3f8;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(44, 82, 130, 0.1);
+  transition: all 0.2s ease;
+}
+
+.inference-item:hover {
+  box-shadow: 0 4px 12px rgba(44, 82, 130, 0.15);
+  transform: translateY(-2px);
+}
+
+.inference-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #ebf8ff;
+  flex-wrap: wrap;
+}
+
+.inference-rule-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c5282;
+}
+
+.inference-badge {
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inference-badge.\#n\! {
+  background: #fc8181;
+  color: #742a2a;
+}
+
+.inference-badge.\#i {
+  background: #90cdf4;
+  color: #2c5282;
+}
+
+.inference-badge.logic.AND {
+  background: #68d391;
+  color: #22543d;
+}
+
+.inference-badge.logic.OR {
+  background: #f6ad55;
+  color: #7c2d12;
+}
+
+.inference-conditions,
+.inference-actions {
+  margin: 1rem 0;
+}
+
+.inference-conditions strong,
+.inference-actions strong {
+  display: block;
+  color: #2c5282;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.inference-conditions ul,
+.inference-actions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.inference-conditions li,
+.inference-actions li {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #f7fafc;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  transition: background 0.15s ease;
+}
+
+.inference-conditions li.condition-true {
+  background: #f0fff4;
+  border-left: 3px solid #48bb78;
+}
+
+.inference-conditions li.condition-false {
+  background: #fff5f5;
+  border-left: 3px solid #fc8181;
+}
+
+.condition-icon {
+  font-weight: bold;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.condition-icon.true {
+  color: #22543d;
+}
+
+.condition-icon.false {
+  color: #742a2a;
+}
+
+.action-item {
+  background: #ebf8ff !important;
+  border-left: 3px solid #2c5282 !important;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.action-icon {
+  color: #2c5282;
+  font-weight: bold;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.inference-arrow {
+  text-align: center;
+  font-size: 2rem;
+  color: #2c5282;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
 @media (max-width: 768px) {
   .welcome-card,
   .question-card,
@@ -509,5 +678,14 @@
 
   .form-actions {
     flex-direction: column;
+  }
+
+  .inference-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inference-item {
+    padding: 1rem;
   }
 }

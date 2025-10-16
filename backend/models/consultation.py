@@ -23,6 +23,7 @@ class Consultation:
         self.status: WorkingMemory = WorkingMemory()
         self.collection_of_rules: OrderedDict = OrderedDict()
         self.conflict_set: List = []
+        self.applied_rules: List = []  # 適用されたルールの履歴
 
         # ルールをコレクションに追加
         for rule in rules:
@@ -148,6 +149,23 @@ class Consultation:
         Returns:
             ルール適用結果
         """
+        # 適用されたルールの情報を記録
+        rule_info = {
+            "rule_name": rule.name,
+            "rule_type": rule.type,
+            "conditions": rule.conditions.copy(),
+            "actions": rule.actions.copy(),
+            "condition_logic": rule.condition_logic,
+            "satisfied_conditions": {}
+        }
+
+        # どの条件が満たされたかを記録
+        for condition in rule.conditions:
+            value = self.status.get_value(condition)
+            rule_info["satisfied_conditions"][condition] = value
+
+        self.applied_rules.append(rule_info)
+
         # ルールのアクションを実行
         rule.execute_actions(self.status)
 
@@ -161,7 +179,8 @@ class Consultation:
                 "message": "推論が完了しました",
                 "results": dict(self.status.hypotheses),
                 "need_input": False,
-                "applied_rule": rule.name
+                "applied_rule": rule.name,
+                "applied_rules": self.applied_rules
             }
         else:
             # 次の推論ステップへ
@@ -363,6 +382,7 @@ class Consultation:
         """
         self.status.clear()
         self.conflict_set = []
+        self.applied_rules = []  # 適用ルール履歴もリセット
 
         # すべてのルールの flag をリセット
         for rule in self.collection_of_rules.values():

@@ -11,6 +11,7 @@ const ConsultationForm = () => {
   const [loading, setLoading] = useState(false);
   const [questionHistory, setQuestionHistory] = useState([]);
   const [impossible, setImpossible] = useState(false);
+  const [appliedRules, setAppliedRules] = useState([]);  // 適用されたルールの履歴
 
   const handleStart = async (visaType) => {
     setLoading(true);
@@ -29,6 +30,7 @@ const ConsultationForm = () => {
         setCurrentQuestion(response.data.question);
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
+        setAppliedRules(response.data.applied_rules || []);
         setCompleted(true);
       } else if (response.data.status === 'impossible') {
         setImpossible(true);
@@ -60,6 +62,7 @@ const ConsultationForm = () => {
         setCurrentQuestion(response.data.question);
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
+        setAppliedRules(response.data.applied_rules || []);
         setCompleted(true);
         setCurrentQuestion('');
       } else if (response.data.status === 'impossible') {
@@ -86,6 +89,7 @@ const ConsultationForm = () => {
       setResults({});
       setCurrentQuestion('');
       setQuestionHistory([]);
+      setAppliedRules([]);
     } catch (error) {
       console.error('リセットに失敗しました:', error);
       alert('リセットに失敗しました。もう一度お試しください。');
@@ -212,6 +216,58 @@ const ConsultationForm = () => {
                     <div className="history-question">Q{index + 1}: {item.question}</div>
                     <div className={`history-answer ${item.answer ? 'yes' : 'no'}`}>
                       A: {item.answer ? 'はい' : 'いいえ'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+
+          {/* 推論過程の詳細 */}
+          {appliedRules.length > 0 && (
+            <details className="inference-details">
+              <summary className="inference-summary">
+                推論過程を表示（適用されたルール: {appliedRules.length}個）
+              </summary>
+              <div className="inference-list">
+                {appliedRules.map((ruleInfo, index) => (
+                  <div key={index} className="inference-item">
+                    <div className="inference-header">
+                      <span className="inference-rule-number">ルール {ruleInfo.rule_name}</span>
+                      <span className={`inference-badge ${ruleInfo.rule_type}`}>
+                        {ruleInfo.rule_type === '#n!' ? '終了ルール' : '中間ルール'}
+                      </span>
+                      <span className={`inference-badge logic ${ruleInfo.condition_logic}`}>
+                        {ruleInfo.condition_logic}
+                      </span>
+                    </div>
+
+                    <div className="inference-conditions">
+                      <strong>満たされた条件:</strong>
+                      <ul>
+                        {Object.entries(ruleInfo.satisfied_conditions).map(([condition, value], i) => (
+                          <li key={i} className={value ? 'condition-true' : 'condition-false'}>
+                            <span className={`condition-icon ${value ? 'true' : 'false'}`}>
+                              {value ? '✓' : '✗'}
+                            </span>
+                            {condition}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="inference-arrow">↓</div>
+
+                    <div className="inference-actions">
+                      <strong>導出された結論:</strong>
+                      <ul>
+                        {ruleInfo.actions.map((action, i) => (
+                          <li key={i} className="action-item">
+                            <span className="action-icon">→</span>
+                            {action}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                 ))}

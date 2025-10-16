@@ -32,6 +32,7 @@ class ConsultationResponse(BaseModel):
     need_input: bool
     applied_rule: Optional[str] = None
     question: Optional[str] = None
+    applied_rules: Optional[list] = None  # 適用されたルールの履歴
 
 
 @router.post("/start", response_model=ConsultationResponse)
