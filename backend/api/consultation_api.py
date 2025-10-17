@@ -104,9 +104,12 @@ def get_status():
     if consultation_session is None:
         raise HTTPException(status_code=400, detail="診断セッションが開始されていません")
 
-    # 競合集合（評価中のルール）の情報を構築
+    # 評価中のルールを決定（conflict_set または pending_rules）
+    rules_to_show = consultation_session.conflict_set if consultation_session.conflict_set else consultation_session.pending_rules
+
+    # 評価中のルールの情報を構築
     conflict_set_info = []
-    for rule in consultation_session.conflict_set:
+    for rule in rules_to_show:
         rule_info = {
             "rule_name": rule.name,
             "rule_type": rule.type,

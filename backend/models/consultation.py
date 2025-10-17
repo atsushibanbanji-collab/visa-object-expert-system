@@ -24,6 +24,7 @@ class Consultation:
         self.collection_of_rules: OrderedDict = OrderedDict()
         self.conflict_set: List = []
         self.applied_rules: List = []  # 適用されたルールの履歴
+        self.pending_rules: List = []  # 評価待ちのルール（質問中）
 
         # ルールをコレクションに追加
         for rule in rules:
@@ -38,6 +39,7 @@ class Consultation:
         """
         # 競合集合を初期化
         self.conflict_set = []
+        self.pending_rules = []
 
         # 推論を開始
         return self.start_deduce()
@@ -66,6 +68,9 @@ class Consultation:
         next_question = self._find_next_question()
 
         if next_question:
+            # この質問を含む未発火ルールをpending_rulesに格納
+            self.pending_rules = self._get_rules_with_condition(next_question)
+
             return {
                 "status": "need_input",
                 "message": "次の質問に答えてください",
@@ -149,6 +154,9 @@ class Consultation:
         Returns:
             ルール適用結果
         """
+        # ルール適用時は pending_rules をクリア
+        self.pending_rules = []
+
         # 適用されたルールの情報を記録
         rule_info = {
             "rule_name": rule.name,
@@ -241,6 +249,24 @@ class Consultation:
             if hypothesis in rule.conditions:
                 rules_needing_hypothesis.append(rule)
         return rules_needing_hypothesis
+
+    def _get_rules_with_condition(self, condition: str) -> List:
+        """
+        指定された条件を含む未発火のルールを取得
+
+        Args:
+            condition: 条件（質問）
+
+        Returns:
+            この条件を含むルールのリスト
+        """
+        rules_with_condition = []
+        for rule in self.collection_of_rules.values():
+            if rule.is_fired():
+                continue
+            if condition in rule.conditions:
+                rules_with_condition.append(rule)
+        return rules_with_condition
 
     def _is_hypothesis_needed(self, hypothesis: str) -> bool:
         """
@@ -385,6 +411,7 @@ class Consultation:
         self.status.clear()
         self.conflict_set = []
         self.applied_rules = []  # 適用ルール履歴もリセット
+        self.pending_rules = []  # 評価待ちルールもリセット
 
         # すべてのルールの flag をリセット
         for rule in self.collection_of_rules.values():
