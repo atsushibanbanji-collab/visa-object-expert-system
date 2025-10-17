@@ -370,27 +370,6 @@ const ConsultationForm = () => {
         <div className="debug-panel">
           <h3 className="debug-title">INFERENCE PROCESS</h3>
 
-          {/* 作業記憶：Findings */}
-          <div className="debug-section">
-            <h4 className="debug-section-title">WORKING MEMORY - FACTS</h4>
-            <div className="debug-content">
-              {Object.keys(debugInfo.findings).length === 0 ? (
-                <p className="debug-empty">まだ回答がありません</p>
-              ) : (
-                <ul className="debug-list">
-                  {Object.entries(debugInfo.findings).map(([key, value]) => (
-                    <li key={key} className={`debug-item ${value ? 'true' : 'false'}`}>
-                      <span className={`debug-icon ${value ? 'true' : 'false'}`}>
-                        {value ? '✓' : '✗'}
-                      </span>
-                      <span className="debug-text">{key}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
           {/* 作業記憶：Hypotheses */}
           <div className="debug-section">
             <h4 className="debug-section-title">WORKING MEMORY - HYPOTHESES</h4>
@@ -455,6 +434,27 @@ const ConsultationForm = () => {
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* 作業記憶：Findings */}
+          <div className="debug-section">
+            <h4 className="debug-section-title">WORKING MEMORY - FACTS</h4>
+            <div className="debug-content">
+              {Object.keys(debugInfo.findings).length === 0 ? (
+                <p className="debug-empty">まだ回答がありません</p>
+              ) : (
+                <ul className="debug-list">
+                  {Object.entries(debugInfo.findings).map(([key, value]) => (
+                    <li key={key} className={`debug-item ${value ? 'true' : 'false'}`}>
+                      <span className={`debug-icon ${value ? 'true' : 'false'}`}>
+                        {value ? '✓' : '✗'}
+                      </span>
+                      <span className="debug-text">{key}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
