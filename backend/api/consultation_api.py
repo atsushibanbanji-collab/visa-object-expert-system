@@ -127,17 +127,11 @@ def get_status():
 
         conflict_set_info.append(rule_info)
 
-    # 適用されたルールから終了ルール（#n!）のみをフィルタ
-    terminal_rules = [
-        rule for rule in consultation_session.applied_rules
-        if rule.get("rule_type") == "#n!"
-    ]
-
     return {
         "findings": consultation_session.status.findings,
         "hypotheses": consultation_session.status.hypotheses,
         "conflict_set": conflict_set_info,  # 評価中のルール
-        "applied_rules": terminal_rules  # 確定したルール（終了ルールのみ）
+        "applied_rules": consultation_session.applied_rules  # 確定したルール（適用済みの全ルール）
     }
 
 
