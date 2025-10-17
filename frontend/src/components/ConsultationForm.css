@@ -17,6 +17,11 @@
   justify-content: center;
 }
 
+.result-card {
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
 .welcome-card h2,
 .question-card h2,
 .result-card h2 {
