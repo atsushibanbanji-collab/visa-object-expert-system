@@ -20,6 +20,9 @@
 .result-card {
   justify-content: flex-start;
   overflow-y: auto;
+  max-width: 900px;
+  margin: 0 auto;
+  align-items: stretch;
 }
 
 .welcome-card h2,
