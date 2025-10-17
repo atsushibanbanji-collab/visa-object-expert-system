@@ -14,6 +14,18 @@
   border-bottom: 3px solid #1a365d;
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.header-title {
+  flex: 1;
+  text-align: center;
+}
+
 .App-header h1 {
   margin: 0 0 0.75rem 0;
   font-size: 2.2rem;
@@ -23,11 +35,70 @@
 }
 
 .App-header p {
-  margin: 0 0 1.5rem 0;
+  margin: 0;
   font-size: 1rem;
   opacity: 0.95;
   font-weight: 400;
   color: #e2e8f0;
+}
+
+.backend-status {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.status-badge.warming {
+  background: rgba(251, 191, 36, 0.2);
+  border: 2px solid rgba(251, 191, 36, 0.5);
+  color: #fef3c7;
+}
+
+.status-badge.ready {
+  background: rgba(34, 197, 94, 0.2);
+  border: 2px solid rgba(34, 197, 94, 0.5);
+  color: #d1fae5;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-badge.warming .status-dot {
+  background: #fbbf24;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+}
+
+.status-badge.ready .status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
 .App-nav {
