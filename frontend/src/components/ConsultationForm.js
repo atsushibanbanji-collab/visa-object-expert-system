@@ -12,7 +12,7 @@ const ConsultationForm = () => {
   const [questionHistory, setQuestionHistory] = useState([]);
   const [impossible, setImpossible] = useState(false);
   const [appliedRules, setAppliedRules] = useState([]);  // 適用されたルールの履歴（結果画面用）
-  const [debugInfo, setDebugInfo] = useState({ findings: {}, hypotheses: {}, applied_rules: [] });  // デバッグ用の推論状態
+  const [debugInfo, setDebugInfo] = useState({ findings: {}, hypotheses: {}, conflict_set: [], applied_rules: [] });  // デバッグ用の推論状態
 
   // 推論状態を取得する関数
   const fetchDebugInfo = async () => {
@@ -107,7 +107,7 @@ const ConsultationForm = () => {
       setCurrentQuestion('');
       setQuestionHistory([]);
       setAppliedRules([]);
-      setDebugInfo({ findings: {}, hypotheses: {}, applied_rules: [] });
+      setDebugInfo({ findings: {}, hypotheses: {}, conflict_set: [], applied_rules: [] });
     } catch (error) {
       console.error('リセットに失敗しました:', error);
       alert('リセットに失敗しました。もう一度お試しください。');
@@ -367,23 +367,53 @@ const ConsultationForm = () => {
         <div className="debug-panel">
           <h3 className="debug-title">INFERENCE PROCESS</h3>
 
-          {/* 作業記憶：Hypotheses */}
+          {/* 評価中のルール */}
           <div className="debug-section">
-            <h4 className="debug-section-title">WORKING MEMORY - HYPOTHESES</h4>
+            <h4 className="debug-section-title">RULES BEING EVALUATED</h4>
             <div className="debug-content">
-              {Object.keys(debugInfo.hypotheses).length === 0 ? (
-                <p className="debug-empty">まだ仮説が導出されていません</p>
+              {(!debugInfo.conflict_set || debugInfo.conflict_set.length === 0) ? (
+                <p className="debug-empty">評価中のルールがありません</p>
               ) : (
-                <ul className="debug-list">
-                  {Object.entries(debugInfo.hypotheses).map(([key, value]) => (
-                    <li key={key} className={`debug-item ${value ? 'true' : 'false'}`}>
-                      <span className={`debug-icon ${value ? 'true' : 'false'}`}>
-                        {value ? '✓' : '✗'}
-                      </span>
-                      <span className="debug-text">{key}</span>
-                    </li>
+                <div className="debug-rules-list">
+                  {debugInfo.conflict_set.map((ruleInfo, index) => (
+                    <div key={index} className="debug-rule-item">
+                      <div className="debug-rule-header">
+                        <span className="debug-rule-name">ルール {ruleInfo.rule_name}</span>
+                        <span className={`debug-badge ${ruleInfo.rule_type}`}>
+                          {ruleInfo.rule_type}
+                        </span>
+                        <span className={`debug-badge logic ${ruleInfo.condition_logic}`}>
+                          {ruleInfo.condition_logic}
+                        </span>
+                      </div>
+                      <div className="debug-rule-conditions">
+                        <strong>条件:</strong>
+                        <ul>
+                          {ruleInfo.conditions.map((condition, i) => {
+                            const value = ruleInfo.satisfied_conditions[condition];
+                            const hasValue = condition in ruleInfo.satisfied_conditions;
+                            return (
+                              <li key={i} className={hasValue ? (value ? 'true' : 'false') : 'unknown'}>
+                                <span className={`debug-icon ${hasValue ? (value ? 'true' : 'false') : 'unknown'}`}>
+                                  {hasValue ? (value ? '✓' : '✗') : '?'}
+                                </span>
+                                {condition}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                      <div className="debug-rule-actions">
+                        <strong>結論:</strong>
+                        <ul>
+                          {ruleInfo.actions.map((action, i) => (
+                            <li key={i}>→ {action}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           </div>

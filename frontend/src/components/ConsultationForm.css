@@ -832,6 +832,10 @@
   color: #999;
 }
 
+.debug-icon.unknown {
+  color: #ccc;
+}
+
 .debug-text {
   color: #333;
   line-height: 1.4;
@@ -953,6 +957,12 @@
 .debug-rule-conditions li.false {
   background: #fafafa;
   border-left: 2px solid #999;
+}
+
+.debug-rule-conditions li.unknown {
+  background: #fafafa;
+  border-left: 2px solid #ccc;
+  opacity: 0.6;
 }
 
 .debug-rule-actions li {

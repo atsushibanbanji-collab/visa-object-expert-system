@@ -104,10 +104,37 @@ def get_status():
     if consultation_session is None:
         raise HTTPException(status_code=400, detail="診断セッションが開始されていません")
 
+    # 競合集合（評価中のルール）の情報を構築
+    conflict_set_info = []
+    for rule in consultation_session.conflict_set:
+        rule_info = {
+            "rule_name": rule.name,
+            "rule_type": rule.type,
+            "conditions": rule.conditions.copy(),
+            "actions": rule.actions.copy(),
+            "condition_logic": rule.condition_logic,
+            "satisfied_conditions": {}
+        }
+
+        # 各条件の現在の状態を記録
+        for condition in rule.conditions:
+            if consultation_session.status.has_key(condition):
+                value = consultation_session.status.get_value(condition)
+                rule_info["satisfied_conditions"][condition] = value
+
+        conflict_set_info.append(rule_info)
+
+    # 適用されたルールから終了ルール（#n!）のみをフィルタ
+    terminal_rules = [
+        rule for rule in consultation_session.applied_rules
+        if rule.get("rule_type") == "#n!"
+    ]
+
     return {
         "findings": consultation_session.status.findings,
         "hypotheses": consultation_session.status.hypotheses,
-        "applied_rules": consultation_session.applied_rules
+        "conflict_set": conflict_set_info,  # 評価中のルール
+        "applied_rules": terminal_rules  # 確定したルール（終了ルールのみ）
     }
 
 
