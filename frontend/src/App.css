@@ -2,23 +2,22 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f8f9fa;
+  background: #ffffff;
 }
 
 .App-header {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
-  padding: 2.5rem 2rem;
+  background: #1a1a1a;
+  padding: 1rem 2rem;
   color: white;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border-bottom: 3px solid #1a365d;
+  border-bottom: 1px solid #333;
 }
 
 .header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .header-title {
@@ -27,116 +26,110 @@
 }
 
 .App-header h1 {
-  margin: 0 0 0.75rem 0;
-  font-size: 2.2rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  margin: 0 0 0.25rem 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0;
   color: #ffffff;
 }
 
 .App-header p {
   margin: 0;
-  font-size: 1rem;
-  opacity: 0.95;
+  font-size: 0.85rem;
+  opacity: 0.7;
   font-weight: 400;
-  color: #e2e8f0;
+  color: #cccccc;
 }
 
 .backend-status {
   position: absolute;
-  top: 2rem;
+  top: 1rem;
   right: 2rem;
 }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  gap: 0.4rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 2px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
 }
 
 .status-badge.warming {
-  background: rgba(251, 191, 36, 0.2);
-  border: 2px solid rgba(251, 191, 36, 0.5);
-  color: #fef3c7;
+  background: #2a2a2a;
+  border-color: #555;
+  color: #ccc;
 }
 
 .status-badge.ready {
-  background: rgba(34, 197, 94, 0.2);
-  border: 2px solid rgba(34, 197, 94, 0.5);
-  color: #d1fae5;
+  background: #1a3a1a;
+  border-color: #2d5a2d;
+  color: #8cd98c;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }
 
 .status-badge.warming .status-dot {
-  background: #fbbf24;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+  background: #999;
 }
 
 .status-badge.ready .status-dot {
-  background: #22c55e;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+  background: #8cd98c;
   animation: none;
 }
 
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
-    transform: scale(1);
   }
   50% {
     opacity: 0.5;
-    transform: scale(0.8);
   }
 }
 
 .App-nav {
   display: flex;
-  gap: 1rem;
+  gap: 0;
   justify-content: center;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
 }
 
 .nav-btn {
-  padding: 0.75rem 2rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  border: 1px solid #333;
+  background: transparent;
+  color: #ccc;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
+  background: #2a2a2a;
+  border-color: #555;
 }
 
 .nav-btn.active {
-  background: white;
-  color: #2c5282;
-  border-color: white;
+  background: #333;
+  color: #fff;
+  border-color: #555;
 }
 
 .App-main {
   flex: 1;
-  padding: 3rem 2rem;
-  max-width: 900px;
-  margin: 0 auto;
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
   width: 100%;
 }
 

@@ -199,8 +199,7 @@ const ConsultationForm = () => {
           {impossible ? (
             <>
               <div className="impossible-result">
-                <span className="impossible-icon">✗</span>
-                <h3>申請できません</h3>
+                <h3>申請不可</h3>
               </div>
               <p className="impossible-message">
                 現在の条件では、{visaTypeNames[selectedVisaType]}の申請ができません。
@@ -210,15 +209,13 @@ const ConsultationForm = () => {
           ) : visaResults.length > 0 ? (
             <>
               <div className="success-result">
-                <span className="success-icon">✓</span>
-                <h3>申請可能です</h3>
+                <h3>申請可能</h3>
               </div>
               <p className="result-intro">以下のビザ申請が可能です：</p>
               <ul className="visa-list">
                 {visaResults.map(([visa], index) => (
                   <li key={index} className="visa-item">
-                    <span className="visa-icon">✓</span>
-                    <span className="visa-text">{visa}</span>
+                    {visa}
                   </li>
                 ))}
               </ul>
@@ -371,11 +368,11 @@ const ConsultationForm = () => {
       {/* 右側：推論過程のリアルタイム表示 */}
       <div className="right-panel">
         <div className="debug-panel">
-          <h3 className="debug-title">🔍 推論過程（デバッグ）</h3>
+          <h3 className="debug-title">INFERENCE PROCESS</h3>
 
           {/* 作業記憶：Findings */}
           <div className="debug-section">
-            <h4 className="debug-section-title">📝 作業記憶（Facts）</h4>
+            <h4 className="debug-section-title">WORKING MEMORY - FACTS</h4>
             <div className="debug-content">
               {Object.keys(debugInfo.findings).length === 0 ? (
                 <p className="debug-empty">まだ回答がありません</p>
@@ -396,7 +393,7 @@ const ConsultationForm = () => {
 
           {/* 作業記憶：Hypotheses */}
           <div className="debug-section">
-            <h4 className="debug-section-title">💡 導出された仮説（Hypotheses）</h4>
+            <h4 className="debug-section-title">WORKING MEMORY - HYPOTHESES</h4>
             <div className="debug-content">
               {Object.keys(debugInfo.hypotheses).length === 0 ? (
                 <p className="debug-empty">まだ仮説が導出されていません</p>
@@ -417,7 +414,7 @@ const ConsultationForm = () => {
 
           {/* 適用されたルール */}
           <div className="debug-section">
-            <h4 className="debug-section-title">⚡ 適用されたルール</h4>
+            <h4 className="debug-section-title">APPLIED RULES</h4>
             <div className="debug-content">
               {appliedRules.length === 0 ? (
                 <p className="debug-empty">まだルールが適用されていません</p>
