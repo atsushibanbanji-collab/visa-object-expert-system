@@ -11,8 +11,8 @@ const ConsultationForm = () => {
   const [loading, setLoading] = useState(false);
   const [questionHistory, setQuestionHistory] = useState([]);
   const [impossible, setImpossible] = useState(false);
-  const [appliedRules, setAppliedRules] = useState([]);  // 適用されたルールの履歴
-  const [debugInfo, setDebugInfo] = useState({ findings: {}, hypotheses: {} });  // デバッグ用の推論状態
+  const [appliedRules, setAppliedRules] = useState([]);  // 適用されたルールの履歴（結果画面用）
+  const [debugInfo, setDebugInfo] = useState({ findings: {}, hypotheses: {}, applied_rules: [] });  // デバッグ用の推論状態
 
   // 推論状態を取得する関数
   const fetchDebugInfo = async () => {
@@ -107,7 +107,7 @@ const ConsultationForm = () => {
       setCurrentQuestion('');
       setQuestionHistory([]);
       setAppliedRules([]);
-      setDebugInfo({ findings: {}, hypotheses: {} });
+      setDebugInfo({ findings: {}, hypotheses: {}, applied_rules: [] });
     } catch (error) {
       console.error('リセットに失敗しました:', error);
       alert('リセットに失敗しました。もう一度お試しください。');
@@ -392,11 +392,11 @@ const ConsultationForm = () => {
           <div className="debug-section">
             <h4 className="debug-section-title">APPLIED RULES</h4>
             <div className="debug-content">
-              {appliedRules.length === 0 ? (
+              {(!debugInfo.applied_rules || debugInfo.applied_rules.length === 0) ? (
                 <p className="debug-empty">まだルールが適用されていません</p>
               ) : (
                 <div className="debug-rules-list">
-                  {appliedRules.map((ruleInfo, index) => (
+                  {debugInfo.applied_rules.map((ruleInfo, index) => (
                     <div key={index} className="debug-rule-item">
                       <div className="debug-rule-header">
                         <span className="debug-rule-name">ルール {ruleInfo.rule_name}</span>

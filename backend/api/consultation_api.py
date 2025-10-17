@@ -97,7 +97,7 @@ def get_status():
     現在の診断状態を取得
 
     Returns:
-        現在の作業記憶（findings と hypotheses）
+        現在の作業記憶（findings と hypotheses）と適用されたルール
     """
     global consultation_session
 
@@ -106,7 +106,8 @@ def get_status():
 
     return {
         "findings": consultation_session.status.findings,
-        "hypotheses": consultation_session.status.hypotheses
+        "hypotheses": consultation_session.status.hypotheses,
+        "applied_rules": consultation_session.applied_rules
     }
 
 
