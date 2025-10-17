@@ -12,6 +12,17 @@ const ConsultationForm = () => {
   const [questionHistory, setQuestionHistory] = useState([]);
   const [impossible, setImpossible] = useState(false);
   const [appliedRules, setAppliedRules] = useState([]);  // 適用されたルールの履歴
+  const [debugInfo, setDebugInfo] = useState({ findings: {}, hypotheses: {} });  // デバッグ用の推論状態
+
+  // 推論状態を取得する関数
+  const fetchDebugInfo = async () => {
+    try {
+      const response = await axios.get('/api/consultation/status');
+      setDebugInfo(response.data);
+    } catch (error) {
+      console.error('推論状態の取得に失敗しました:', error);
+    }
+  };
 
   const handleStart = async (visaType) => {
     setLoading(true);
@@ -36,6 +47,9 @@ const ConsultationForm = () => {
         setImpossible(true);
         setCompleted(true);
       }
+
+      // 推論状態を取得（デバッグ用）
+      await fetchDebugInfo();
     } catch (error) {
       console.error('診断の開始に失敗しました:', error);
       alert('診断の開始に失敗しました。もう一度お試しください。');
@@ -70,6 +84,9 @@ const ConsultationForm = () => {
         setCompleted(true);
         setCurrentQuestion('');
       }
+
+      // 推論状態を取得（デバッグ用）
+      await fetchDebugInfo();
     } catch (error) {
       console.error('回答の送信に失敗しました:', error);
       alert('回答の送信に失敗しました。もう一度お試しください。');
@@ -90,6 +107,7 @@ const ConsultationForm = () => {
       setCurrentQuestion('');
       setQuestionHistory([]);
       setAppliedRules([]);
+      setDebugInfo({ findings: {}, hypotheses: {} });
     } catch (error) {
       console.error('リセットに失敗しました:', error);
       alert('リセットに失敗しました。もう一度お試しください。');
@@ -297,53 +315,152 @@ const ConsultationForm = () => {
 
   // 質問画面
   return (
-    <div className="consultation-container">
-      <div className="question-card">
-        <div className="progress-indicator">
-          <span className="progress-count">質問 {questionHistory.length + 1}</span>
-        </div>
-
-        <h2>{currentQuestion}</h2>
-
-        <div className="answer-buttons">
-          <button
-            className="btn btn-answer btn-yes"
-            onClick={() => handleAnswer(true)}
-            disabled={loading}
-          >
-            はい
-          </button>
-          <button
-            className="btn btn-answer btn-no"
-            onClick={() => handleAnswer(false)}
-            disabled={loading}
-          >
-            いいえ
-          </button>
-        </div>
-
-        {loading && (
-          <div className="loading-message">
-            <div className="loading-spinner"></div>
-            <p>推論中...</p>
+    <div className="consultation-container split-view">
+      {/* 左側：診断画面 */}
+      <div className="left-panel">
+        <div className="question-card">
+          <div className="progress-indicator">
+            <span className="progress-count">質問 {questionHistory.length + 1}</span>
           </div>
-        )}
 
-        {/* 回答済み質問の数を表示 */}
-        {questionHistory.length > 0 && (
-          <div className="answered-count">
-            これまでに {questionHistory.length} 個の質問に回答しました
+          <h2>{currentQuestion}</h2>
+
+          <div className="answer-buttons">
+            <button
+              className="btn btn-answer btn-yes"
+              onClick={() => handleAnswer(true)}
+              disabled={loading}
+            >
+              はい
+            </button>
+            <button
+              className="btn btn-answer btn-no"
+              onClick={() => handleAnswer(false)}
+              disabled={loading}
+            >
+              いいえ
+            </button>
           </div>
-        )}
 
-        <div className="form-actions">
-          <button
-            className="btn btn-secondary btn-small"
-            onClick={handleReset}
-            disabled={loading}
-          >
-            最初から
-          </button>
+          {loading && (
+            <div className="loading-message">
+              <div className="loading-spinner"></div>
+              <p>推論中...</p>
+            </div>
+          )}
+
+          {/* 回答済み質問の数を表示 */}
+          {questionHistory.length > 0 && (
+            <div className="answered-count">
+              これまでに {questionHistory.length} 個の質問に回答しました
+            </div>
+          )}
+
+          <div className="form-actions">
+            <button
+              className="btn btn-secondary btn-small"
+              onClick={handleReset}
+              disabled={loading}
+            >
+              最初から
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 右側：推論過程のリアルタイム表示 */}
+      <div className="right-panel">
+        <div className="debug-panel">
+          <h3 className="debug-title">🔍 推論過程（デバッグ）</h3>
+
+          {/* 作業記憶：Findings */}
+          <div className="debug-section">
+            <h4 className="debug-section-title">📝 作業記憶（Facts）</h4>
+            <div className="debug-content">
+              {Object.keys(debugInfo.findings).length === 0 ? (
+                <p className="debug-empty">まだ回答がありません</p>
+              ) : (
+                <ul className="debug-list">
+                  {Object.entries(debugInfo.findings).map(([key, value]) => (
+                    <li key={key} className={`debug-item ${value ? 'true' : 'false'}`}>
+                      <span className={`debug-icon ${value ? 'true' : 'false'}`}>
+                        {value ? '✓' : '✗'}
+                      </span>
+                      <span className="debug-text">{key}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* 作業記憶：Hypotheses */}
+          <div className="debug-section">
+            <h4 className="debug-section-title">💡 導出された仮説（Hypotheses）</h4>
+            <div className="debug-content">
+              {Object.keys(debugInfo.hypotheses).length === 0 ? (
+                <p className="debug-empty">まだ仮説が導出されていません</p>
+              ) : (
+                <ul className="debug-list">
+                  {Object.entries(debugInfo.hypotheses).map(([key, value]) => (
+                    <li key={key} className={`debug-item ${value ? 'true' : 'false'}`}>
+                      <span className={`debug-icon ${value ? 'true' : 'false'}`}>
+                        {value ? '✓' : '✗'}
+                      </span>
+                      <span className="debug-text">{key}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* 適用されたルール */}
+          <div className="debug-section">
+            <h4 className="debug-section-title">⚡ 適用されたルール</h4>
+            <div className="debug-content">
+              {appliedRules.length === 0 ? (
+                <p className="debug-empty">まだルールが適用されていません</p>
+              ) : (
+                <div className="debug-rules-list">
+                  {appliedRules.map((ruleInfo, index) => (
+                    <div key={index} className="debug-rule-item">
+                      <div className="debug-rule-header">
+                        <span className="debug-rule-name">ルール {ruleInfo.rule_name}</span>
+                        <span className={`debug-badge ${ruleInfo.rule_type}`}>
+                          {ruleInfo.rule_type}
+                        </span>
+                        <span className={`debug-badge logic ${ruleInfo.condition_logic}`}>
+                          {ruleInfo.condition_logic}
+                        </span>
+                      </div>
+                      <div className="debug-rule-conditions">
+                        <strong>条件:</strong>
+                        <ul>
+                          {Object.entries(ruleInfo.satisfied_conditions).map(([condition, value], i) => (
+                            <li key={i} className={value ? 'true' : 'false'}>
+                              <span className={`debug-icon ${value ? 'true' : 'false'}`}>
+                                {value ? '✓' : '✗'}
+                              </span>
+                              {condition}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="debug-rule-actions">
+                        <strong>結論:</strong>
+                        <ul>
+                          {ruleInfo.actions.map((action, i) => (
+                            <li key={i}>→ {action}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
