@@ -7,6 +7,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.rule_db import RuleDB
+from datetime import datetime
 import json
 
 router = APIRouter(prefix="/api/rules", tags=["rule_management"])
@@ -231,3 +232,124 @@ def reorder_rules(rule_ids: List[int], db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": f"{len(rule_ids)}個のルールの順序を更新しました"}
+
+
+@router.get("/export")
+def export_rules(visa_type: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    ルールをJSON形式でエクスポート
+
+    Args:
+        visa_type: ビザタイプでフィルタ（オプション）
+        db: データベースセッション
+
+    Returns:
+        JSON形式のルールデータ
+    """
+    query = db.query(RuleDB)
+
+    if visa_type:
+        query = query.filter(
+            (RuleDB.visa_type == visa_type) | (RuleDB.visa_type == "ALL")
+        )
+
+    query = query.order_by(RuleDB.priority)
+    rules = query.all()
+
+    # エクスポート用のデータ形式に変換
+    export_data = {
+        "version": "1.0",
+        "exported_at": datetime.now().isoformat(),
+        "visa_type": visa_type or "ALL",
+        "rules": [
+            {
+                "name": rule.name,
+                "visa_type": rule.visa_type,
+                "rule_type": rule.rule_type,
+                "condition_logic": rule.condition_logic,
+                "conditions": rule.get_conditions_list(),
+                "actions": rule.get_actions_list(),
+                "priority": rule.priority
+            }
+            for rule in rules
+        ]
+    }
+
+    return export_data
+
+
+class ImportRequest(BaseModel):
+    """ルールインポートリクエスト"""
+    rules: List[dict]
+    overwrite: bool = False  # 既存ルールを上書きするか
+
+
+@router.post("/import")
+def import_rules(request: ImportRequest, db: Session = Depends(get_db)):
+    """
+    JSON形式のルールをインポート
+
+    Args:
+        request: インポートリクエスト
+        db: データベースセッション
+
+    Returns:
+        インポート結果
+    """
+    imported_count = 0
+    skipped_count = 0
+    updated_count = 0
+    errors = []
+
+    for rule_data in request.rules:
+        try:
+            # 必須フィールドのチェック
+            required_fields = ["name", "visa_type", "rule_type", "conditions", "actions"]
+            for field in required_fields:
+                if field not in rule_data:
+                    errors.append(f"ルール {rule_data.get('name', 'unknown')}: {field} が不足しています")
+                    continue
+
+            # 同じ名前のルールが既に存在するかチェック
+            existing_rule = db.query(RuleDB).filter(RuleDB.name == rule_data["name"]).first()
+
+            if existing_rule:
+                if request.overwrite:
+                    # 上書き
+                    existing_rule.visa_type = rule_data["visa_type"]
+                    existing_rule.rule_type = rule_data["rule_type"]
+                    existing_rule.condition_logic = rule_data.get("condition_logic", "AND")
+                    existing_rule.conditions = json.dumps(rule_data["conditions"], ensure_ascii=False)
+                    existing_rule.actions = json.dumps(rule_data["actions"], ensure_ascii=False)
+                    existing_rule.priority = rule_data.get("priority", existing_rule.priority)
+                    updated_count += 1
+                else:
+                    # スキップ
+                    skipped_count += 1
+                    continue
+            else:
+                # 新規作成
+                new_rule = RuleDB(
+                    name=rule_data["name"],
+                    visa_type=rule_data["visa_type"],
+                    rule_type=rule_data["rule_type"],
+                    condition_logic=rule_data.get("condition_logic", "AND"),
+                    conditions=json.dumps(rule_data["conditions"], ensure_ascii=False),
+                    actions=json.dumps(rule_data["actions"], ensure_ascii=False),
+                    priority=rule_data.get("priority", 0)
+                )
+                db.add(new_rule)
+                imported_count += 1
+
+        except Exception as e:
+            errors.append(f"ルール {rule_data.get('name', 'unknown')}: {str(e)}")
+
+    db.commit()
+
+    return {
+        "message": "インポートが完了しました",
+        "imported": imported_count,
+        "updated": updated_count,
+        "skipped": skipped_count,
+        "errors": errors
+    }

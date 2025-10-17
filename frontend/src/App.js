@@ -5,6 +5,7 @@ import ConsultationForm from './components/ConsultationForm';
 import QuestionsPage from './components/QuestionsPage';
 import RuleManagementPage from './components/RuleManagementPage';
 import RuleOrderPage from './components/RuleOrderPage';
+import ValidationPage from './components/ValidationPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('consultation');
@@ -45,6 +46,8 @@ function App() {
         return <RuleManagementPage />;
       case 'order':
         return <RuleOrderPage />;
+      case 'validation':
+        return <ValidationPage />;
       default:
         return <ConsultationForm />;
     }
@@ -97,6 +100,12 @@ function App() {
             onClick={() => setCurrentPage('order')}
           >
             順序管理
+          </button>
+          <button
+            className={`nav-btn ${currentPage === 'validation' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('validation')}
+          >
+            検証
           </button>
         </nav>
       </header>

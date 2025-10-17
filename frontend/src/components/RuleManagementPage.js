@@ -8,6 +8,9 @@ const RuleManagementPage = () => {
   const [editingRule, setEditingRule] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [visaTypeFilter, setVisaTypeFilter] = useState('ALL');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importData, setImportData] = useState('');
+  const [overwriteExisting, setOverwriteExisting] = useState(false);
 
   // フォームの状態
   const [formData, setFormData] = useState({
@@ -185,6 +188,79 @@ const RuleManagementPage = () => {
     });
   };
 
+  // エクスポート
+  const handleExport = async () => {
+    try {
+      const params = visaTypeFilter !== 'ALL' ? { visa_type: visaTypeFilter } : {};
+      const response = await axios.get('/api/rules/export', { params });
+
+      // JSONファイルとしてダウンロード
+      const dataStr = JSON.stringify(response.data, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `visa-rules-${visaTypeFilter}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      alert('ルールをエクスポートしました');
+    } catch (error) {
+      console.error('エクスポートに失敗しました:', error);
+      alert('エクスポートに失敗しました');
+    }
+  };
+
+  // インポート
+  const handleImport = async () => {
+    try {
+      const data = JSON.parse(importData);
+
+      if (!data.rules || !Array.isArray(data.rules)) {
+        alert('無効なデータ形式です。rules配列が必要です。');
+        return;
+      }
+
+      const response = await axios.post('/api/rules/import', {
+        rules: data.rules,
+        overwrite: overwriteExisting
+      });
+
+      alert(
+        `インポートが完了しました\n` +
+        `新規: ${response.data.imported}件\n` +
+        `更新: ${response.data.updated}件\n` +
+        `スキップ: ${response.data.skipped}件\n` +
+        (response.data.errors.length > 0 ? `\nエラー:\n${response.data.errors.join('\n')}` : '')
+      );
+
+      setShowImportModal(false);
+      setImportData('');
+      fetchRules();
+    } catch (error) {
+      console.error('インポートに失敗しました:', error);
+      if (error.message.includes('JSON')) {
+        alert('JSONの形式が正しくありません');
+      } else {
+        alert('インポートに失敗しました');
+      }
+    }
+  };
+
+  // ファイルから読み込み
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImportData(e.target.result);
+      };
+      reader.readAsText(file);
+    }
+  };
+
   return (
     <div className="rule-management-container">
       <div className="rule-management-header">
@@ -204,6 +280,12 @@ const RuleManagementPage = () => {
           </select>
           <button onClick={handleCreateNew} className="btn btn-primary">
             新規ルール作成
+          </button>
+          <button onClick={handleExport} className="btn btn-secondary">
+            エクスポート
+          </button>
+          <button onClick={() => setShowImportModal(true)} className="btn btn-secondary">
+            インポート
           </button>
         </div>
       </div>
@@ -261,6 +343,64 @@ const RuleManagementPage = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showImportModal && (
+        <div className="modal-overlay" onClick={() => setShowImportModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>ルールのインポート</h3>
+
+            <div className="form-group">
+              <label>JSONファイルを選択</label>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                className="file-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>またはJSONデータを貼り付け</label>
+              <textarea
+                value={importData}
+                onChange={(e) => setImportData(e.target.value)}
+                placeholder='{"rules": [...]}'
+                rows={10}
+                className="import-textarea"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={overwriteExisting}
+                  onChange={(e) => setOverwriteExisting(e.target.checked)}
+                />
+                既存のルールを上書きする
+              </label>
+              <p className="help-text-small">
+                チェックしない場合、同じ名前のルールはスキップされます
+              </p>
+            </div>
+
+            <div className="form-actions">
+              <button onClick={handleImport} className="btn btn-primary">
+                インポート
+              </button>
+              <button
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportData('');
+                }}
+                className="btn btn-secondary"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
