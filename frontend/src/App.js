@@ -4,6 +4,7 @@ import './App.css';
 import ConsultationForm from './components/ConsultationForm';
 import QuestionsPage from './components/QuestionsPage';
 import RuleManagementPage from './components/RuleManagementPage';
+import RuleOrderPage from './components/RuleOrderPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('consultation');
@@ -42,6 +43,8 @@ function App() {
         return <QuestionsPage onBack={() => setCurrentPage('consultation')} />;
       case 'rules':
         return <RuleManagementPage />;
+      case 'order':
+        return <RuleOrderPage />;
       default:
         return <ConsultationForm />;
     }
@@ -88,6 +91,12 @@ function App() {
             onClick={() => setCurrentPage('rules')}
           >
             ルール管理
+          </button>
+          <button
+            className={`nav-btn ${currentPage === 'order' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('order')}
+          >
+            順序管理
           </button>
         </nav>
       </header>
