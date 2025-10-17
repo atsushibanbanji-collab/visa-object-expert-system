@@ -33,3 +33,8 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.get("/api/health")
+def api_health_check():
+    """フロントエンドのプリウォームアップ用"""
+    return {"status": "healthy", "rules_cached": len(RULES_CACHE)}
