@@ -528,104 +528,117 @@
 
 /* 推論過程表示のスタイル */
 .inference-details {
-  margin-top: 2rem;
-  border-top: 1px solid #e2e8f0;
-  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
 }
 
 .inference-summary {
   cursor: pointer;
-  color: #2c5282;
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, #f7fafc 0%, #ebf8ff 100%);
-  border-radius: 6px;
-  transition: background 0.2s;
-  border: 1px solid #bee3f8;
+  color: #333;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  background: #f5f5f5;
+  border-radius: 0;
+  transition: background 0.1s;
+  border: 1px solid #ddd;
 }
 
 .inference-summary:hover {
-  background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+  background: #e8e8e8;
 }
 
 .inference-list {
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0;
 }
 
 .inference-item {
   background: white;
-  border: 2px solid #bee3f8;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(44, 82, 130, 0.1);
-  transition: all 0.2s ease;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  padding: 0.6rem;
+  box-shadow: none;
+  transition: none;
+  border-bottom: none;
+}
+
+.inference-item:last-child {
+  border-bottom: 1px solid #ddd;
 }
 
 .inference-item:hover {
-  box-shadow: 0 4px 12px rgba(44, 82, 130, 0.15);
-  transform: translateY(-2px);
+  background: #fafafa;
 }
 
 .inference-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #ebf8ff;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #eee;
   flex-wrap: wrap;
 }
 
 .inference-rule-number {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #2c5282;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+  font-family: monospace;
 }
 
 .inference-badge {
-  padding: 0.35rem 0.85rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0;
+  font-size: 0.65rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
+  border: 1px solid;
+  font-family: monospace;
 }
 
 .inference-badge.\#n\! {
-  background: #fc8181;
-  color: #742a2a;
+  background: #f5f5f5;
+  color: #666;
+  border-color: #999;
 }
 
 .inference-badge.\#i {
-  background: #90cdf4;
-  color: #2c5282;
+  background: #f5f5f5;
+  color: #666;
+  border-color: #999;
 }
 
 .inference-badge.logic.AND {
-  background: #68d391;
-  color: #22543d;
+  background: #333;
+  color: #fff;
+  border-color: #333;
 }
 
 .inference-badge.logic.OR {
-  background: #f6ad55;
-  color: #7c2d12;
+  background: #666;
+  color: #fff;
+  border-color: #666;
 }
 
 .inference-conditions,
 .inference-actions {
-  margin: 1rem 0;
+  margin: 0.4rem 0;
 }
 
 .inference-conditions strong,
 .inference-actions strong {
   display: block;
-  color: #2c5282;
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
+  color: #666;
+  font-size: 0.7rem;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .inference-conditions ul,
@@ -637,62 +650,61 @@
 
 .inference-conditions li,
 .inference-actions li {
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.5rem;
-  background: #f7fafc;
-  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0;
+  background: #fafafa;
+  border-radius: 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  transition: background 0.15s ease;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  transition: none;
+  border-bottom: 1px solid #f5f5f5;
 }
 
 .inference-conditions li.condition-true {
-  background: #f0fff4;
-  border-left: 3px solid #48bb78;
+  background: #fafafa;
+  border-left: 2px solid #4a4a4a;
 }
 
 .inference-conditions li.condition-false {
-  background: #fff5f5;
-  border-left: 3px solid #fc8181;
+  background: #fafafa;
+  border-left: 2px solid #999;
 }
 
 .condition-icon {
-  font-weight: bold;
-  font-size: 1.2rem;
+  font-weight: normal;
+  font-size: 0.9rem;
   flex-shrink: 0;
+  font-family: monospace;
 }
 
 .condition-icon.true {
-  color: #22543d;
+  color: #4a4a4a;
 }
 
 .condition-icon.false {
-  color: #742a2a;
+  color: #999;
 }
 
 .action-item {
-  background: #ebf8ff !important;
-  border-left: 3px solid #2c5282 !important;
-  color: #2d3748;
-  font-weight: 500;
+  background: #f5f5f5 !important;
+  border-left: 2px solid #666 !important;
+  color: #333;
+  font-weight: normal;
 }
 
 .action-icon {
-  color: #2c5282;
-  font-weight: bold;
-  font-size: 1.2rem;
+  color: #666;
+  font-weight: normal;
+  font-size: 0.9rem;
   flex-shrink: 0;
+  font-family: monospace;
 }
 
 .inference-arrow {
-  text-align: center;
-  font-size: 2rem;
-  color: #2c5282;
-  font-weight: bold;
-  margin: 1rem 0;
+  display: none;
 }
 
 /* 2カラムレイアウト（デバッグモード） */

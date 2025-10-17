@@ -264,7 +264,7 @@ const ConsultationForm = () => {
                     </div>
 
                     <div className="inference-conditions">
-                      <strong>満たされた条件:</strong>
+                      <strong>条件:</strong>
                       <ul>
                         {Object.entries(ruleInfo.satisfied_conditions).map(([condition, value], i) => (
                           <li key={i} className={value ? 'condition-true' : 'condition-false'}>
@@ -277,15 +277,12 @@ const ConsultationForm = () => {
                       </ul>
                     </div>
 
-                    <div className="inference-arrow">↓</div>
-
                     <div className="inference-actions">
-                      <strong>導出された結論:</strong>
+                      <strong>結論:</strong>
                       <ul>
                         {ruleInfo.actions.map((action, i) => (
                           <li key={i} className="action-item">
-                            <span className="action-icon">→</span>
-                            {action}
+                            → {action}
                           </li>
                         ))}
                       </ul>
