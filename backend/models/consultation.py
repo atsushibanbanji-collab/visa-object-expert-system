@@ -159,10 +159,12 @@ class Consultation:
             "satisfied_conditions": {}
         }
 
-        # どの条件が満たされたかを記録
+        # 実際に回答された条件だけを記録（未回答の条件は除外）
         for condition in rule.conditions:
-            value = self.status.get_value(condition)
-            rule_info["satisfied_conditions"][condition] = value
+            # findingsまたはhypothesesに存在する条件のみ記録
+            if self.status.has_key(condition):
+                value = self.status.get_value(condition)
+                rule_info["satisfied_conditions"][condition] = value
 
         self.applied_rules.append(rule_info)
 
