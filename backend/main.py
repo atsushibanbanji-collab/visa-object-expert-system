@@ -1,9 +1,24 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.consultation_api import router as consultation_router
-from backend.rules.visa_rules import get_rules_by_visa_type
+from backend.api.rule_management_api import router as rule_management_router
+from backend.database import init_db
+import os
+
+# データベースからルールを読み込むか、ハードコードされたルールを使うか
+USE_DATABASE_RULES = os.getenv("USE_DATABASE_RULES", "false").lower() == "true"
+
+if USE_DATABASE_RULES:
+    from backend.rules.rule_loader import get_rules_by_visa_type_from_db as get_rules_by_visa_type
+    print("📚 Using database-based rules")
+else:
+    from backend.rules.visa_rules import get_rules_by_visa_type
+    print("📚 Using hardcoded rules")
 
 app = FastAPI(title="Visa Expert System API")
+
+# データベースを初期化
+init_db()
 
 # CORS設定（フロントエンドからのアクセスを許可）
 app.add_middleware(
@@ -23,8 +38,9 @@ RULES_CACHE = {
 }
 print(f"✅ Rules cache initialized: E={len(RULES_CACHE['E'])} rules, L={len(RULES_CACHE['L'])} rules, B={len(RULES_CACHE['B'])} rules")
 
-# APIルーターを登録（ルールキャッシュを渡す）
+# APIルーターを登録
 app.include_router(consultation_router)
+app.include_router(rule_management_router)
 
 @app.get("/")
 def read_root():
