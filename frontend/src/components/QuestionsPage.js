@@ -106,10 +106,20 @@ const QuestionsPage = ({ onBack }) => {
                   </summary>
                   <div className="rule-details">
                     <div className="rule-section">
-                      <h4>条件（IF）</h4>
+                      <h4>
+                        条件（IF）
+                        <span className={`condition-logic ${rule.condition_logic}`}>
+                          {rule.condition_logic}
+                        </span>
+                      </h4>
                       <ul>
                         {rule.conditions.map((cond, i) => (
-                          <li key={i}>{cond}</li>
+                          <li key={i}>
+                            {i > 0 && (
+                              <span className="logic-connector">{rule.condition_logic}</span>
+                            )}
+                            {cond}
+                          </li>
                         ))}
                       </ul>
                     </div>
