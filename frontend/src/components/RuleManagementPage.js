@@ -12,6 +12,11 @@ const RuleManagementPage = () => {
   const [importData, setImportData] = useState('');
   const [overwriteExisting, setOverwriteExisting] = useState(false);
 
+  // 順序変更用のステート
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [originalRules, setOriginalRules] = useState([]);
+
   // フォームの状態
   const [formData, setFormData] = useState({
     name: '',
@@ -30,6 +35,8 @@ const RuleManagementPage = () => {
       const params = visaTypeFilter !== 'ALL' ? { visa_type: visaTypeFilter } : {};
       const response = await axios.get('/api/rules', { params });
       setRules(response.data);
+      setOriginalRules(response.data);
+      setHasChanges(false);
     } catch (error) {
       console.error('ルールの取得に失敗しました:', error);
       alert('ルールの取得に失敗しました');
@@ -261,6 +268,75 @@ const RuleManagementPage = () => {
     }
   };
 
+  // 順序変更: ドラッグ開始
+  const handleDragStart = (e, index) => {
+    setDraggedItem(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  // 順序変更: ドラッグオーバー
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedItem === null || draggedItem === index) return;
+
+    const newRules = [...rules];
+    const draggedRule = newRules[draggedItem];
+    newRules.splice(draggedItem, 1);
+    newRules.splice(index, 0, draggedRule);
+
+    setRules(newRules);
+    setDraggedItem(index);
+    setHasChanges(true);
+  };
+
+  // 順序変更: ドラッグ終了
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  // 順序変更: 上に移動
+  const handleMoveUp = (index) => {
+    if (index === 0) return;
+    const newRules = [...rules];
+    [newRules[index - 1], newRules[index]] = [newRules[index], newRules[index - 1]];
+    setRules(newRules);
+    setHasChanges(true);
+  };
+
+  // 順序変更: 下に移動
+  const handleMoveDown = (index) => {
+    if (index === rules.length - 1) return;
+    const newRules = [...rules];
+    [newRules[index], newRules[index + 1]] = [newRules[index + 1], newRules[index]];
+    setRules(newRules);
+    setHasChanges(true);
+  };
+
+  // 順序を保存
+  const handleSaveOrder = async () => {
+    try {
+      // 各ルールのpriorityを更新
+      for (let i = 0; i < rules.length; i++) {
+        await axios.put(`/api/rules/${rules[i].id}`, {
+          ...rules[i],
+          priority: i
+        });
+      }
+      alert('順序を保存しました');
+      setOriginalRules(rules);
+      setHasChanges(false);
+    } catch (error) {
+      console.error('順序の保存に失敗しました:', error);
+      alert('順序の保存に失敗しました');
+    }
+  };
+
+  // 順序をリセット
+  const handleResetOrder = () => {
+    setRules(originalRules);
+    setHasChanges(false);
+  };
+
   return (
     <div className="rule-management-container">
       <div className="rule-management-header">
@@ -287,6 +363,16 @@ const RuleManagementPage = () => {
           <button onClick={() => setShowImportModal(true)} className="btn btn-secondary">
             インポート
           </button>
+          {hasChanges && (
+            <>
+              <button onClick={handleSaveOrder} className="btn btn-save">
+                順序を保存
+              </button>
+              <button onClick={handleResetOrder} className="btn btn-secondary">
+                リセット
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -297,17 +383,52 @@ const RuleManagementPage = () => {
           <table className="rules-table">
             <thead>
               <tr>
+                <th style={{width: '40px'}}>#</th>
+                <th style={{width: '60px'}}>移動</th>
                 <th style={{width: '100px'}}>ルール名</th>
                 <th style={{width: '80px'}}>ビザ</th>
-                <th style={{width: '40%'}}>条件</th>
-                <th style={{width: '40%'}}>アクション</th>
+                <th style={{width: '35%'}}>条件</th>
+                <th style={{width: '35%'}}>アクション</th>
                 <th style={{width: '120px'}}>操作</th>
               </tr>
             </thead>
             <tbody>
-              {rules.map((rule) => (
-                <tr key={rule.id}>
-                  <td>{rule.name}</td>
+              {rules.map((rule, index) => (
+                <tr
+                  key={rule.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={draggedItem === index ? 'dragging' : ''}
+                >
+                  <td style={{textAlign: 'center', fontWeight: 'bold', color: '#666'}}>
+                    {index + 1}
+                  </td>
+                  <td>
+                    <div className="move-buttons">
+                      <button
+                        onClick={() => handleMoveUp(index)}
+                        disabled={index === 0}
+                        className="btn btn-tiny btn-move"
+                        title="上に移動"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => handleMoveDown(index)}
+                        disabled={index === rules.length - 1}
+                        className="btn btn-tiny btn-move"
+                        title="下に移動"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="drag-handle" title="ドラッグして並び替え">≡</span>
+                    {rule.name}
+                  </td>
                   <td>{rule.visa_type}</td>
                   <td>
                     <div className="rule-text-list">

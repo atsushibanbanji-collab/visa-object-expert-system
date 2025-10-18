@@ -4,7 +4,6 @@ import './App.css';
 import ConsultationForm from './components/ConsultationForm';
 import QuestionsPage from './components/QuestionsPage';
 import RuleManagementPage from './components/RuleManagementPage';
-import RuleOrderPage from './components/RuleOrderPage';
 import ValidationPage from './components/ValidationPage';
 
 function App() {
@@ -44,8 +43,6 @@ function App() {
         return <QuestionsPage onBack={() => setCurrentPage('consultation')} />;
       case 'rules':
         return <RuleManagementPage />;
-      case 'order':
-        return <RuleOrderPage />;
       case 'validation':
         return <ValidationPage />;
       default:
@@ -94,12 +91,6 @@ function App() {
             onClick={() => setCurrentPage('rules')}
           >
             ルール管理
-          </button>
-          <button
-            className={`nav-btn ${currentPage === 'order' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('order')}
-          >
-            順序管理
           </button>
           <button
             className={`nav-btn ${currentPage === 'validation' ? 'active' : ''}`}

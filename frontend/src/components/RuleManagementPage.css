@@ -151,6 +151,61 @@
   background: #c0392b;
 }
 
+.btn-save {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #229954;
+}
+
+/* 順序変更関連 */
+.move-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.btn-tiny {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
+  min-width: auto;
+}
+
+.btn-move {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.btn-move:hover:not(:disabled) {
+  background: #e8e8e8;
+}
+
+.btn-move:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.drag-handle {
+  cursor: move;
+  font-size: 1.2rem;
+  color: #999;
+  margin-right: 0.5rem;
+  user-select: none;
+}
+
+.rules-table tbody tr.dragging {
+  opacity: 0.5;
+  background: #f0f0f0;
+}
+
+.rules-table tbody tr {
+  cursor: move;
+  transition: background 0.15s;
+}
+
 /* モーダル */
 .modal-overlay {
   position: fixed;
