@@ -667,13 +667,13 @@
 }
 
 .inference-conditions li.condition-true {
-  background: #fafafa;
-  border-left: 2px solid #4a4a4a;
+  background: #f0fff4;
+  border-left: 3px solid #48bb78;
 }
 
 .inference-conditions li.condition-false {
-  background: #fafafa;
-  border-left: 2px solid #999;
+  background: #fff5f5;
+  border-left: 3px solid #fc8181;
 }
 
 .condition-icon {
@@ -684,11 +684,13 @@
 }
 
 .condition-icon.true {
-  color: #4a4a4a;
+  color: #22543d;
+  font-weight: bold;
 }
 
 .condition-icon.false {
-  color: #999;
+  color: #c53030;
+  font-weight: bold;
 }
 
 .action-item {
@@ -808,13 +810,13 @@
 }
 
 .debug-item.true {
-  background: #f5f5f5;
-  border-left: 2px solid #4a4a4a;
+  background: #f0fff4;
+  border-left: 3px solid #48bb78;
 }
 
 .debug-item.false {
-  background: #f5f5f5;
-  border-left: 2px solid #999;
+  background: #fff5f5;
+  border-left: 3px solid #fc8181;
 }
 
 .debug-icon {
@@ -825,15 +827,18 @@
 }
 
 .debug-icon.true {
-  color: #4a4a4a;
+  color: #22543d;
+  font-weight: bold;
 }
 
 .debug-icon.false {
-  color: #999;
+  color: #c53030;
+  font-weight: bold;
 }
 
 .debug-icon.unknown {
-  color: #ccc;
+  color: #c05621;
+  font-weight: bold;
 }
 
 .debug-text {
@@ -950,19 +955,18 @@
 }
 
 .debug-rule-conditions li.true {
-  background: #fafafa;
-  border-left: 2px solid #333;
+  background: #f0fff4;
+  border-left: 3px solid #48bb78;
 }
 
 .debug-rule-conditions li.false {
-  background: #fafafa;
-  border-left: 2px solid #999;
+  background: #fff5f5;
+  border-left: 3px solid #fc8181;
 }
 
 .debug-rule-conditions li.unknown {
-  background: #fafafa;
-  border-left: 2px solid #ccc;
-  opacity: 0.6;
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
 }
 
 .debug-rule-actions li {
