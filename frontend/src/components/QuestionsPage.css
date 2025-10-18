@@ -256,22 +256,6 @@
   border-radius: 4px;
   color: #4a5568;
   font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.logic-connector {
-  display: inline-block;
-  padding: 0.15rem 0.4rem;
-  background: #666;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  font-family: monospace;
-  border-radius: 3px;
-  margin-right: 0.25rem;
-  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

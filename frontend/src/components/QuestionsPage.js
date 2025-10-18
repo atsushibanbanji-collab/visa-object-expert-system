@@ -114,12 +114,7 @@ const QuestionsPage = ({ onBack }) => {
                       </h4>
                       <ul>
                         {rule.conditions.map((cond, i) => (
-                          <li key={i}>
-                            {i > 0 && (
-                              <span className="logic-connector">{rule.condition_logic}</span>
-                            )}
-                            {cond}
-                          </li>
+                          <li key={i}>{cond}</li>
                         ))}
                       </ul>
                     </div>
