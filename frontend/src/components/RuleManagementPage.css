@@ -49,10 +49,11 @@
 
 .rules-table th,
 .rules-table td {
-  padding: 0.75rem 1rem;
+  padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #eee;
   font-size: 0.9rem;
+  vertical-align: top;
 }
 
 .rules-table th {
@@ -100,10 +101,39 @@
   border-color: #666;
 }
 
+/* ルールテキスト表示 */
+.rule-text-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rule-text-item {
+  padding: 0.4rem 0.6rem;
+  background: #f9f9f9;
+  border-left: 2px solid #ddd;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #333;
+}
+
+.logic-separator {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  margin-right: 0.5rem;
+  background: #666;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: monospace;
+}
+
 .btn-edit {
   background: #4a90e2;
   color: white;
-  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  width: 100%;
 }
 
 .btn-edit:hover {
@@ -113,6 +143,8 @@
 .btn-delete {
   background: #e74c3c;
   color: white;
+  display: block;
+  width: 100%;
 }
 
 .btn-delete:hover {

@@ -297,14 +297,11 @@ const RuleManagementPage = () => {
           <table className="rules-table">
             <thead>
               <tr>
-                <th>ルール名</th>
-                <th>ビザタイプ</th>
-                <th>ルールタイプ</th>
-                <th>条件ロジック</th>
-                <th>条件数</th>
-                <th>アクション数</th>
-                <th>優先度</th>
-                <th>操作</th>
+                <th style={{width: '100px'}}>ルール名</th>
+                <th style={{width: '80px'}}>ビザ</th>
+                <th style={{width: '40%'}}>条件</th>
+                <th style={{width: '40%'}}>アクション</th>
+                <th style={{width: '120px'}}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -313,18 +310,29 @@ const RuleManagementPage = () => {
                   <td>{rule.name}</td>
                   <td>{rule.visa_type}</td>
                   <td>
-                    <span className={`badge ${rule.rule_type}`}>
-                      {rule.rule_type}
-                    </span>
+                    <div className="rule-text-list">
+                      {rule.conditions.map((condition, idx) => (
+                        <div key={idx} className="rule-text-item">
+                          {rule.condition_logic === 'OR' && idx > 0 && (
+                            <span className="logic-separator">OR</span>
+                          )}
+                          {rule.condition_logic === 'AND' && idx > 0 && (
+                            <span className="logic-separator">AND</span>
+                          )}
+                          {condition}
+                        </div>
+                      ))}
+                    </div>
                   </td>
                   <td>
-                    <span className={`badge logic ${rule.condition_logic}`}>
-                      {rule.condition_logic}
-                    </span>
+                    <div className="rule-text-list">
+                      {rule.actions.map((action, idx) => (
+                        <div key={idx} className="rule-text-item">
+                          {action}
+                        </div>
+                      ))}
+                    </div>
                   </td>
-                  <td>{rule.conditions.length}</td>
-                  <td>{rule.actions.length}</td>
-                  <td>{rule.priority}</td>
                   <td>
                     <button
                       onClick={() => handleEdit(rule)}
