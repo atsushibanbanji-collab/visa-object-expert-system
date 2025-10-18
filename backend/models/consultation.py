@@ -253,6 +253,7 @@ class Consultation:
     def _get_rules_with_condition(self, condition: str) -> List:
         """
         指定された条件を含む未発火のルールを取得
+        AND条件のルールで、他の条件が既にFalseになっている場合は除外
 
         Args:
             condition: 条件（質問）
@@ -265,6 +266,22 @@ class Consultation:
             if rule.is_fired():
                 continue
             if condition in rule.conditions:
+                # AND条件のルールの場合、他の条件が既にFalseになっていないかチェック
+                if rule.condition_logic == "AND":
+                    can_be_satisfied = True
+                    for cond in rule.conditions:
+                        if cond == condition:
+                            # 今質問している条件はスキップ
+                            continue
+                        value = self.status.get_value(cond)
+                        # 他の条件が明示的にFalseの場合、このルールは適用不可
+                        if value is False:
+                            can_be_satisfied = False
+                            break
+                    if not can_be_satisfied:
+                        # このルールは除外
+                        continue
+
                 rules_with_condition.append(rule)
         return rules_with_condition
 
@@ -306,6 +323,7 @@ class Consultation:
         """
         この質問が本当に必要かチェック
         この質問を含むルール、およびその結果を使うルールをチェック
+        AND条件のルールで、他の条件が既にFalseになっている場合は不要
 
         Args:
             condition: チェックする条件
@@ -320,6 +338,22 @@ class Consultation:
 
             if condition not in rule.conditions:
                 continue
+
+            # AND条件のルールの場合、他の条件が既にFalseになっていないかチェック
+            if rule.condition_logic == "AND":
+                can_be_satisfied = True
+                for cond in rule.conditions:
+                    if cond == condition:
+                        # 今チェックしている条件はスキップ
+                        continue
+                    value = self.status.get_value(cond)
+                    # 他の条件が明示的にFalseの場合、このルールは適用不可
+                    if value is False:
+                        can_be_satisfied = False
+                        break
+                if not can_be_satisfied:
+                    # このルールは適用不可なので、この質問は不要（次のルールをチェック）
+                    continue
 
             # このルールが既に満たされているかチェック
             if not rule.check_conditions(self.status):
