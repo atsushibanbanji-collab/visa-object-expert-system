@@ -82,6 +82,9 @@ def submit_answer(request: AnswerRequest):
     if consultation_session is None:
         raise HTTPException(status_code=400, detail="診断セッションが開始されていません")
 
+    # 回答を記録する前に現在の状態をスナップショットとして保存
+    consultation_session.save_snapshot()
+
     # ユーザーの回答を作業記憶に記録
     consultation_session.status.set_finding(request.key, request.value)
 
@@ -149,6 +152,25 @@ def reset_consultation():
         consultation_session.reset()
 
     return {"message": "診断がリセットされました"}
+
+
+@router.post("/go_back", response_model=ConsultationResponse)
+def go_back():
+    """
+    前の質問に戻る
+
+    Returns:
+        前の質問の情報
+    """
+    global consultation_session
+
+    if consultation_session is None:
+        raise HTTPException(status_code=400, detail="診断セッションが開始されていません")
+
+    # 前の状態に戻る
+    result = consultation_session.go_back()
+
+    return ConsultationResponse(**result)
 
 
 @router.get("/questions")

@@ -116,6 +116,43 @@ const ConsultationForm = () => {
     }
   };
 
+  const handleGoBack = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post('/api/consultation/go_back');
+
+      // 履歴から最後の質問を削除
+      setQuestionHistory(prev => prev.slice(0, -1));
+
+      // 次の質問または状態を処理
+      if (response.data.status === 'need_input') {
+        setCurrentQuestion(response.data.question);
+        setCompleted(false);
+        setImpossible(false);
+      } else if (response.data.status === 'completed') {
+        setResults(response.data.results);
+        setAppliedRules(response.data.applied_rules || []);
+        setCompleted(true);
+        setCurrentQuestion('');
+      } else if (response.data.status === 'impossible') {
+        setImpossible(true);
+        setCompleted(true);
+        setCurrentQuestion('');
+      } else if (response.data.status === 'error') {
+        // これ以上戻れない場合
+        alert(response.data.message);
+      }
+
+      // 推論状態を取得（デバッグ用）
+      await fetchDebugInfo();
+    } catch (error) {
+      console.error('前の質問に戻るのに失敗しました:', error);
+      alert('前の質問に戻るのに失敗しました。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ビザ選択画面
   if (!started) {
     return (
@@ -335,6 +372,26 @@ const ConsultationForm = () => {
               いいえ
             </button>
           </div>
+
+          {/* 戻るボタン */}
+          {questionHistory.length > 0 && (
+            <div className="navigation-buttons">
+              <button
+                className="btn btn-back"
+                onClick={handleGoBack}
+                disabled={loading}
+              >
+                ← 前の質問に戻る
+              </button>
+              <button
+                className="btn btn-reset"
+                onClick={handleReset}
+                disabled={loading}
+              >
+                最初に戻る
+              </button>
+            </div>
+          )}
 
           {loading && (
             <div className="loading-message">

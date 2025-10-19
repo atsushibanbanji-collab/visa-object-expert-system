@@ -25,6 +25,7 @@ class Consultation:
         self.conflict_set: List = []
         self.applied_rules: List = []  # 適用されたルールの履歴
         self.pending_rules: List = []  # 評価待ちのルール（質問中）
+        self.history_stack: List[Dict[str, Any]] = []  # 各ステップのスナップショット
 
         # ルールをコレクションに追加
         for rule in rules:
@@ -446,7 +447,55 @@ class Consultation:
         self.conflict_set = []
         self.applied_rules = []  # 適用ルール履歴もリセット
         self.pending_rules = []  # 評価待ちルールもリセット
+        self.history_stack = []  # 履歴スタックもリセット
 
         # すべてのルールの flag をリセット
         for rule in self.collection_of_rules.values():
             rule.flag = "#fire"
+
+    def save_snapshot(self) -> None:
+        """
+        現在の診断状態のスナップショットを保存
+        ユーザーが回答する前の状態を保存して、後で戻れるようにする
+        """
+        import copy
+
+        # 現在の状態をディープコピーして保存
+        snapshot = {
+            "findings": copy.deepcopy(self.status.findings),
+            "hypotheses": copy.deepcopy(self.status.hypotheses),
+            "applied_rules": copy.deepcopy(self.applied_rules),
+            "rule_flags": {rule_name: rule.flag for rule_name, rule in self.collection_of_rules.items()}
+        }
+        self.history_stack.append(snapshot)
+
+    def go_back(self) -> Dict[str, Any]:
+        """
+        前の質問に戻る
+        履歴スタックから前の状態を復元して、その時点の質問を返す
+
+        Returns:
+            前の質問の情報、または戻れない場合はエラー情報
+        """
+        if not self.history_stack:
+            return {
+                "status": "error",
+                "message": "これ以上戻れません",
+                "need_input": False
+            }
+
+        # 最後のスナップショットを取り出す
+        snapshot = self.history_stack.pop()
+
+        # 状態を復元
+        self.status.findings = snapshot["findings"]
+        self.status.hypotheses = snapshot["hypotheses"]
+        self.applied_rules = snapshot["applied_rules"]
+
+        # ルールのフラグを復元
+        for rule_name, flag in snapshot["rule_flags"].items():
+            if rule_name in self.collection_of_rules:
+                self.collection_of_rules[rule_name].flag = flag
+
+        # 復元後に推論を実行して次の質問を取得
+        return self.start_deduce()
