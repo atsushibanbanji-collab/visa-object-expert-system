@@ -171,6 +171,52 @@ def check_rule_consistency(rules: List[RuleDB]) -> List[Dict]:
     return errors
 
 
+def check_dependency_order(rules: List[RuleDB]) -> List[Dict]:
+    """
+    依存関係の順序をチェック
+    アクションを生成するルールが、そのアクションを条件として使うルールより前（priority が小さい）にあるかを確認
+
+    Args:
+        rules: ルールのリスト
+
+    Returns:
+        順序違反のリスト
+    """
+    violations = []
+
+    # アクション → そのアクションを生成するルールのマッピング
+    action_to_producer = {}
+    for rule in rules:
+        for action in rule.get_actions_list():
+            if action not in action_to_producer:
+                action_to_producer[action] = []
+            action_to_producer[action].append(rule)
+
+    # 各ルールについて、その条件が他のルールのアクションの場合、順序をチェック
+    for rule in rules:
+        for condition in rule.get_conditions_list():
+            # この条件が他のルールのアクションとして生成される場合
+            if condition in action_to_producer:
+                for producer_rule in action_to_producer[condition]:
+                    # 自分自身は除外
+                    if producer_rule.name == rule.name:
+                        continue
+
+                    # producer_rule が rule より後ろにある（priority が大きい）場合は違反
+                    if producer_rule.priority > rule.priority:
+                        violations.append({
+                            "type": "wrong_order",
+                            "producer_rule": producer_rule.name,
+                            "producer_priority": producer_rule.priority,
+                            "consumer_rule": rule.name,
+                            "consumer_priority": rule.priority,
+                            "action": condition,
+                            "description": f"ルール {producer_rule.name} (priority={producer_rule.priority}) が '{condition}' を生成しますが、それを条件として使うルール {rule.name} (priority={rule.priority}) より後ろにあります"
+                        })
+
+    return violations
+
+
 @router.get("/check")
 def validate_rules(visa_type: str = None, db: Session = Depends(get_db)):
     """
@@ -196,9 +242,10 @@ def validate_rules(visa_type: str = None, db: Session = Depends(get_db)):
     consistency_errors = check_rule_consistency(rules)
     circular_dependencies = find_circular_dependencies(rules)
     unreachable_rules = find_unreachable_rules(rules)
+    dependency_order_violations = check_dependency_order(rules)
 
     # 警告とエラーをカウント
-    error_count = len(consistency_errors)
+    error_count = len(consistency_errors) + len(dependency_order_violations)
     warning_count = len(circular_dependencies) + len(unreachable_rules)
 
     return {
@@ -209,5 +256,6 @@ def validate_rules(visa_type: str = None, db: Session = Depends(get_db)):
         "warning_count": warning_count,
         "consistency_errors": consistency_errors,
         "circular_dependencies": circular_dependencies,
-        "unreachable_rules": unreachable_rules
+        "unreachable_rules": unreachable_rules,
+        "dependency_order_violations": dependency_order_violations
     }

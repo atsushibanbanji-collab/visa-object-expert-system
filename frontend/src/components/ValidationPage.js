@@ -166,11 +166,43 @@ const ValidationPage = () => {
             </div>
           )}
 
+          {/* 依存関係の順序違反 */}
+          {validationResult.dependency_order_violations && validationResult.dependency_order_violations.length > 0 && (
+            <div className="validation-section error-section">
+              <h4>依存関係の順序違反 ({validationResult.dependency_order_violations.length})</h4>
+              <p className="section-description">
+                アクションを生成するルールが、そのアクションを条件として使うルールより後ろにあります。
+                推論が正しく動作しない可能性があります。
+              </p>
+              <ul className="issue-list">
+                {validationResult.dependency_order_violations.map((violation, index) => (
+                  <li key={index} className="issue-item error">
+                    <span className="issue-icon">✗</span>
+                    <div className="issue-content">
+                      <div className="issue-title">{violation.description}</div>
+                      <div className="issue-detail">
+                        <strong>生成側:</strong> ルール {violation.producer_rule} (priority={violation.producer_priority})
+                        が「{violation.action}」を生成
+                      </div>
+                      <div className="issue-detail">
+                        <strong>使用側:</strong> ルール {violation.consumer_rule} (priority={violation.consumer_priority})
+                        が「{violation.action}」を条件として使用
+                      </div>
+                      <div className="issue-solution">
+                        → ルール {violation.producer_rule} の priority を {violation.consumer_rule} より小さくしてください
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* 問題なし */}
           {validationResult.status === 'ok' && (
             <div className="validation-section success-section">
               <p className="success-message">
-                すべてのルールが正常です。整合性エラー、循環参照、到達不能ルールは検出されませんでした。
+                すべてのルールが正常です。整合性エラー、循環参照、到達不能ルール、依存関係の順序違反は検出されませんでした。
               </p>
             </div>
           )}
@@ -189,6 +221,7 @@ const ValidationPage = () => {
           <li><strong>整合性エラー:</strong> ルール名の重複、空の条件/アクション、終了ルールの不足など</li>
           <li><strong>循環参照:</strong> ルール間で相互に依存して無限ループになる問題</li>
           <li><strong>到達不能ルール:</strong> 条件が満たされず実行されないルール</li>
+          <li><strong>依存関係の順序違反:</strong> アクションを生成するルールが、そのアクションを条件として使うルールより後ろにある問題（推論順序の違反）</li>
         </ul>
       </div>
     </div>

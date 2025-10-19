@@ -212,6 +212,16 @@
   margin-bottom: 0.25rem;
 }
 
+.issue-solution {
+  font-size: 0.9rem;
+  color: #2563eb;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+  font-weight: 500;
+}
+
 .issue-type {
   font-size: 0.85rem;
   color: #999;
