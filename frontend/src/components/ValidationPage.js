@@ -31,10 +31,10 @@ const ValidationPage = () => {
         title: '依存関係の順序違反を自動修正',
         description: '以下のルールのpriorityを変更します：',
         changes: violations.map(v => ({
-          rule: v.producer_rule,
-          oldPriority: v.producer_priority,
-          newPriority: Math.max(0, v.consumer_priority - 10),
-          reason: `ルール ${v.consumer_rule} (priority=${v.consumer_priority}) より前に配置`
+          rule: v.consumer_rule,
+          oldPriority: v.consumer_priority,
+          newPriority: v.producer_priority + 10,
+          reason: `ルール ${v.producer_rule} (priority=${v.producer_priority}) より後ろに配置`
         })),
         fixType,
         violations

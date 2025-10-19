@@ -290,7 +290,7 @@ def auto_fix_violations(request: AutoFixRequest, db: Session = Depends(get_db)):
 def fix_dependency_order(violations: List[Dict], visa_type: str, db: Session) -> Dict:
     """
     依存関係の順序違反を自動修正
-    producer_ruleのpriorityを、consumer_ruleより小さい値に変更
+    consumer_ruleのpriorityを、producer_ruleより大きい値に変更（後ろに配置）
 
     Args:
         violations: 順序違反のリスト
@@ -310,35 +310,35 @@ def fix_dependency_order(violations: List[Dict], visa_type: str, db: Session) ->
     modified_rules = set()
 
     for violation in violations:
-        producer_name = violation["producer_rule"]
-        consumer_priority = violation["consumer_priority"]
+        consumer_name = violation["consumer_rule"]
+        producer_priority = violation["producer_priority"]
 
-        # producer_ruleを取得
-        producer_rule = db.query(RuleDB).filter(
-            RuleDB.name == producer_name,
+        # consumer_ruleを取得
+        consumer_rule = db.query(RuleDB).filter(
+            RuleDB.name == consumer_name,
             (RuleDB.visa_type == visa_type) | (RuleDB.visa_type == "ALL")
         ).first()
 
-        if not producer_rule:
+        if not consumer_rule:
             continue
 
         # 既に修正済みの場合はスキップ
-        if producer_rule.name in modified_rules:
+        if consumer_rule.name in modified_rules:
             continue
 
-        # 新しいpriorityを計算（consumer_priorityより10小さくする）
-        old_priority = producer_rule.priority
-        new_priority = max(0, consumer_priority - 10)
+        # 新しいpriorityを計算（producer_priorityより10大きくする）
+        old_priority = consumer_rule.priority
+        new_priority = producer_priority + 10
 
         # priorityを更新
-        producer_rule.priority = new_priority
-        modified_rules.add(producer_rule.name)
+        consumer_rule.priority = new_priority
+        modified_rules.add(consumer_rule.name)
 
         changes.append({
-            "rule_name": producer_rule.name,
+            "rule_name": consumer_rule.name,
             "old_priority": old_priority,
             "new_priority": new_priority,
-            "reason": f"ルール {violation['consumer_rule']} (priority={consumer_priority}) より前に配置"
+            "reason": f"ルール {violation['producer_rule']} (priority={producer_priority}) より後ろに配置"
         })
 
     # 変更をコミット
