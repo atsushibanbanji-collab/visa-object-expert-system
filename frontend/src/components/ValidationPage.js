@@ -6,6 +6,8 @@ const ValidationPage = () => {
   const [validationResult, setValidationResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [visaTypeFilter, setVisaTypeFilter] = useState('E');
+  const [showFixDialog, setShowFixDialog] = useState(false);
+  const [fixPreview, setFixPreview] = useState(null);
 
   const runValidation = async () => {
     setLoading(true);
@@ -18,6 +20,55 @@ const ValidationPage = () => {
       alert('検証に失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAutoFix = async (fixType, violations) => {
+    // 修正内容のプレビューを生成
+    let preview = null;
+    if (fixType === 'dependency_order') {
+      preview = {
+        title: '依存関係の順序違反を自動修正',
+        description: '以下のルールのpriorityを変更します：',
+        changes: violations.map(v => ({
+          rule: v.producer_rule,
+          oldPriority: v.producer_priority,
+          newPriority: Math.max(0, v.consumer_priority - 10),
+          reason: `ルール ${v.consumer_rule} (priority=${v.consumer_priority}) より前に配置`
+        })),
+        fixType,
+        violations
+      };
+    }
+
+    setFixPreview(preview);
+    setShowFixDialog(true);
+  };
+
+  const applyFix = async () => {
+    setLoading(true);
+    setShowFixDialog(false);
+
+    try {
+      const response = await axios.post('/api/validation/auto-fix', {
+        visa_type: visaTypeFilter,
+        fix_type: fixPreview.fixType,
+        violations: fixPreview.violations
+      });
+
+      if (response.data.success) {
+        alert(`修正完了: ${response.data.message}`);
+        // 修正後に再検証
+        await runValidation();
+      } else {
+        alert(`修正失敗: ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error('自動修正に失敗しました:', error);
+      alert('自動修正に失敗しました');
+    } finally {
+      setLoading(false);
+      setFixPreview(null);
     }
   };
 
@@ -169,7 +220,16 @@ const ValidationPage = () => {
           {/* 依存関係の順序違反 */}
           {validationResult.dependency_order_violations && validationResult.dependency_order_violations.length > 0 && (
             <div className="validation-section error-section">
-              <h4>依存関係の順序違反 ({validationResult.dependency_order_violations.length})</h4>
+              <div className="section-header-with-action">
+                <h4>依存関係の順序違反 ({validationResult.dependency_order_violations.length})</h4>
+                <button
+                  className="btn btn-fix"
+                  onClick={() => handleAutoFix('dependency_order', validationResult.dependency_order_violations)}
+                  disabled={loading}
+                >
+                  🔧 自動修正
+                </button>
+              </div>
               <p className="section-description">
                 アクションを生成するルールが、そのアクションを条件として使うルールより後ろにあります。
                 推論が正しく動作しない可能性があります。
@@ -224,6 +284,47 @@ const ValidationPage = () => {
           <li><strong>依存関係の順序違反:</strong> アクションを生成するルールが、そのアクションを条件として使うルールより後ろにある問題（推論順序の違反）</li>
         </ul>
       </div>
+
+      {/* 自動修正確認ダイアログ */}
+      {showFixDialog && fixPreview && (
+        <div className="modal-overlay" onClick={() => setShowFixDialog(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{fixPreview.title}</h3>
+              <button className="modal-close" onClick={() => setShowFixDialog(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description">{fixPreview.description}</p>
+              <div className="fix-preview-list">
+                {fixPreview.changes.map((change, index) => (
+                  <div key={index} className="fix-preview-item">
+                    <div className="fix-preview-rule">
+                      <strong>ルール {change.rule}</strong>
+                    </div>
+                    <div className="fix-preview-change">
+                      priority: {change.oldPriority} → {change.newPriority}
+                    </div>
+                    <div className="fix-preview-reason">
+                      {change.reason}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="modal-warning">
+                ⚠️ この変更により、ルールの評価順序が変わります。よろしいですか？
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowFixDialog(false)}>
+                キャンセル
+              </button>
+              <button className="btn btn-primary" onClick={applyFix}>
+                修正を適用
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

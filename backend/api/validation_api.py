@@ -1,13 +1,21 @@
 """
 ルール検証API エンドポイント
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models.rule_db import RuleDB
 from typing import List, Dict, Set
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/validation", tags=["validation"])
+
+
+class AutoFixRequest(BaseModel):
+    """自動修正リクエスト"""
+    visa_type: str
+    fix_type: str  # "dependency_order"
+    violations: List[Dict]
 
 
 def find_circular_dependencies(rules: List[RuleDB]) -> List[Dict]:
@@ -258,4 +266,86 @@ def validate_rules(visa_type: str = None, db: Session = Depends(get_db)):
         "circular_dependencies": circular_dependencies,
         "unreachable_rules": unreachable_rules,
         "dependency_order_violations": dependency_order_violations
+    }
+
+
+@router.post("/auto-fix")
+def auto_fix_violations(request: AutoFixRequest, db: Session = Depends(get_db)):
+    """
+    検証エラーを自動修正
+
+    Args:
+        request: 修正リクエスト
+        db: データベースセッション
+
+    Returns:
+        修正結果
+    """
+    if request.fix_type == "dependency_order":
+        return fix_dependency_order(request.violations, request.visa_type, db)
+    else:
+        raise HTTPException(status_code=400, detail=f"未対応の修正タイプ: {request.fix_type}")
+
+
+def fix_dependency_order(violations: List[Dict], visa_type: str, db: Session) -> Dict:
+    """
+    依存関係の順序違反を自動修正
+    producer_ruleのpriorityを、consumer_ruleより小さい値に変更
+
+    Args:
+        violations: 順序違反のリスト
+        visa_type: ビザタイプ
+        db: データベースセッション
+
+    Returns:
+        修正結果
+    """
+    if not violations:
+        return {
+            "success": False,
+            "message": "修正する違反がありません"
+        }
+
+    changes = []
+    modified_rules = set()
+
+    for violation in violations:
+        producer_name = violation["producer_rule"]
+        consumer_priority = violation["consumer_priority"]
+
+        # producer_ruleを取得
+        producer_rule = db.query(RuleDB).filter(
+            RuleDB.name == producer_name,
+            (RuleDB.visa_type == visa_type) | (RuleDB.visa_type == "ALL")
+        ).first()
+
+        if not producer_rule:
+            continue
+
+        # 既に修正済みの場合はスキップ
+        if producer_rule.name in modified_rules:
+            continue
+
+        # 新しいpriorityを計算（consumer_priorityより10小さくする）
+        old_priority = producer_rule.priority
+        new_priority = max(0, consumer_priority - 10)
+
+        # priorityを更新
+        producer_rule.priority = new_priority
+        modified_rules.add(producer_rule.name)
+
+        changes.append({
+            "rule_name": producer_rule.name,
+            "old_priority": old_priority,
+            "new_priority": new_priority,
+            "reason": f"ルール {violation['consumer_rule']} (priority={consumer_priority}) より前に配置"
+        })
+
+    # 変更をコミット
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"{len(changes)}個のルールを修正しました",
+        "changes": changes
     }
