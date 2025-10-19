@@ -7,7 +7,7 @@ const RuleManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [editingRule, setEditingRule] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [visaTypeFilter, setVisaTypeFilter] = useState('ALL');
+  const [visaTypeFilter, setVisaTypeFilter] = useState('E');
   const [showImportModal, setShowImportModal] = useState(false);
   const [importData, setImportData] = useState('');
   const [overwriteExisting, setOverwriteExisting] = useState(false);
@@ -32,7 +32,7 @@ const RuleManagementPage = () => {
   const fetchRules = async () => {
     try {
       setLoading(true);
-      const params = visaTypeFilter !== 'ALL' ? { visa_type: visaTypeFilter } : {};
+      const params = { visa_type: visaTypeFilter };
       const response = await axios.get('/api/rules', { params });
       setRules(response.data);
       setOriginalRules(response.data);
@@ -54,7 +54,7 @@ const RuleManagementPage = () => {
     setEditingRule(null);
     setFormData({
       name: '',
-      visa_type: 'E',
+      visa_type: visaTypeFilter,
       rule_type: '#n!',
       condition_logic: 'AND',
       conditions: [''],
@@ -198,7 +198,7 @@ const RuleManagementPage = () => {
   // エクスポート
   const handleExport = async () => {
     try {
-      const params = visaTypeFilter !== 'ALL' ? { visa_type: visaTypeFilter } : {};
+      const params = { visa_type: visaTypeFilter };
       const response = await axios.get('/api/rules/export', { params });
 
       // JSONファイルとしてダウンロード
@@ -341,19 +341,44 @@ const RuleManagementPage = () => {
     <div className="rule-management-container">
       <div className="rule-management-header">
         <h2>ルール管理</h2>
+      </div>
+
+      {/* ビザタイプタブ */}
+      <div className="visa-tabs">
+        <button
+          className={`visa-tab ${visaTypeFilter === 'E' ? 'active' : ''}`}
+          onClick={() => setVisaTypeFilter('E')}
+        >
+          Eビザ
+        </button>
+        <button
+          className={`visa-tab ${visaTypeFilter === 'L' ? 'active' : ''}`}
+          onClick={() => setVisaTypeFilter('L')}
+        >
+          Lビザ
+        </button>
+        <button
+          className={`visa-tab ${visaTypeFilter === 'B' ? 'active' : ''}`}
+          onClick={() => setVisaTypeFilter('B')}
+        >
+          Bビザ
+        </button>
+        <button
+          className={`visa-tab ${visaTypeFilter === 'H' ? 'active' : ''}`}
+          onClick={() => setVisaTypeFilter('H')}
+        >
+          H-1Bビザ
+        </button>
+        <button
+          className={`visa-tab ${visaTypeFilter === 'J' ? 'active' : ''}`}
+          onClick={() => setVisaTypeFilter('J')}
+        >
+          J-1ビザ
+        </button>
+      </div>
+
+      <div className="rule-management-content">
         <div className="header-actions">
-          <select
-            value={visaTypeFilter}
-            onChange={(e) => setVisaTypeFilter(e.target.value)}
-            className="visa-filter"
-          >
-            <option value="ALL">すべてのビザ</option>
-            <option value="E">Eビザ</option>
-            <option value="L">Lビザ</option>
-            <option value="B">Bビザ</option>
-            <option value="H">H-1Bビザ</option>
-            <option value="J">J-1ビザ</option>
-          </select>
           <button onClick={handleCreateNew} className="btn btn-primary">
             新規ルール作成
           </button>
@@ -660,6 +685,7 @@ const RuleManagementPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
