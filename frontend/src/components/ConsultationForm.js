@@ -366,7 +366,7 @@ const ConsultationForm = () => {
           {/* 推論チェーン表示 */}
           {reasoningChain && reasoningChain.length > 0 && (
             <div className="reasoning-chain">
-              <h3 className="reasoning-title">推論の流れ</h3>
+              <h3 className="reasoning-title">RULES BEING EVALUATED（評価中のルール）</h3>
               {reasoningChain.map((rule, ruleIdx) => (
                 <div key={ruleIdx} className="reasoning-rule">
                   <div className="rule-header">

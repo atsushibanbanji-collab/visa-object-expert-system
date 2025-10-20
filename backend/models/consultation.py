@@ -503,18 +503,28 @@ class Consultation:
 
     def _build_reasoning_chain(self, current_question: str) -> List[Dict[str, Any]]:
         """
-        現在の質問に関連する推論チェーンを構築
+        評価中のルールチェーンを構築（未発火のルールをすべて含む）
 
         Args:
             current_question: 現在の質問
 
         Returns:
-            推論チェーン情報のリスト
+            推論チェーン情報のリスト（優先順位順）
         """
         chain = []
 
-        # pending_rulesから推論チェーンを構築
-        for rule in self.pending_rules:
+        # すべての未発火ルールを評価対象として表示
+        unfired_rules = []
+        for rule_name, rule in self.collection_of_rules.items():
+            # 既に発火したルールはスキップ
+            if rule.is_fired():
+                continue
+            unfired_rules.append(rule)
+
+        # ルールを優先順位順にソート（ルール名の数値順）
+        unfired_rules.sort(key=lambda r: int(r.name) if r.name.isdigit() else float('inf'))
+
+        for rule in unfired_rules:
             rule_info = {
                 "rule_name": rule.name,
                 "rule_type": rule.type,
