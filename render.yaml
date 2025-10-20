@@ -4,8 +4,8 @@ services:
     name: visa-expert-backend
     env: python
     region: oregon
-    buildCommand: pip install -r backend/requirements.txt && python -m backend.migrate_rules
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python -m backend.migrate_rules && uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
