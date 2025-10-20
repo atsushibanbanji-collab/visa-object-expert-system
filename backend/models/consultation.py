@@ -72,12 +72,22 @@ class Consultation:
             # この質問を含む未発火ルールをpending_rulesに格納
             self.pending_rules = self._get_rules_with_condition(next_question)
 
+            # デバッグ情報
+            pending_rule_names = [r.name for r in self.pending_rules]
+            print(f"DEBUG: next_question='{next_question}'")
+            print(f"DEBUG: pending_rules={pending_rule_names}")
+
+            reasoning_chain = self._build_reasoning_chain(next_question)
+            print(f"DEBUG: reasoning_chain length={len(reasoning_chain)}")
+            print(f"DEBUG: reasoning_chain rules={[r['rule_name'] for r in reasoning_chain]}")
+
             return {
                 "status": "need_input",
                 "message": "次の質問に答えてください",
                 "question": next_question,
                 "need_input": True,
-                "reasoning_chain": self._build_reasoning_chain(next_question)
+                "reasoning_chain": reasoning_chain,
+                "debug_pending_rules": pending_rule_names  # デバッグ用
             }
 
         # 質問もルールもない場合は推論完了
@@ -503,50 +513,68 @@ class Consultation:
 
     def _build_reasoning_chain(self, current_question: str) -> List[Dict[str, Any]]:
         """
-        評価中のルールチェーンを構築（依存関係があるルールのみ）
+        評価中のルールチェーンを構築（依存関係チェーン + 部分的に満たされているルール）
 
         Args:
             current_question: 現在の質問
 
         Returns:
-            推論チェーン情報のリスト（依存関係の逆順、ルール番号順）
+            推論チェーン情報のリスト（ルール番号順）
         """
+        chain_rules_set = set()
+
+        # 1. pending_rulesから依存関係チェーンを構築
+        if self.pending_rules:
+            for rule in self.pending_rules:
+                chain_rules_set.add(rule.name)
+
+            # pending_rulesのアクションを収集
+            actions_to_check = set()
+            for rule in self.pending_rules:
+                for action in rule.actions:
+                    actions_to_check.add(action)
+
+            # 依存関係を順向きに辿る：これらのアクションを条件として使っている未発火ルールを探す
+            while actions_to_check:
+                current_actions = actions_to_check.copy()
+                actions_to_check.clear()
+
+                for rule_name, rule in self.collection_of_rules.items():
+                    # 既に発火したルール、または既に追加したルールはスキップ
+                    if rule.is_fired() or rule.name in chain_rules_set:
+                        continue
+
+                    # このルールの条件に、current_actionsのいずれかが含まれているかチェック
+                    for condition in rule.conditions:
+                        if condition in current_actions:
+                            chain_rules_set.add(rule.name)
+                            # このルールのアクションも次のチェック対象に追加
+                            for action in rule.actions:
+                                actions_to_check.add(action)
+                            break
+
+        # 2. 条件が部分的に満たされているルール（少なくとも1つの条件がTrue/False）を追加
+        for rule_name, rule in self.collection_of_rules.items():
+            if rule.is_fired() or rule.name in chain_rules_set:
+                continue
+
+            # このルールの条件のいずれかが既に回答されているかチェック
+            has_answered_condition = False
+            for condition in rule.conditions:
+                value = self.status.get_value(condition)
+                if value is not None:  # True or False
+                    has_answered_condition = True
+                    break
+
+            if has_answered_condition:
+                chain_rules_set.add(rule.name)
+
+        # ルールオブジェクトを取得してソート
         chain_rules = []
+        for rule_name, rule in self.collection_of_rules.items():
+            if rule.name in chain_rules_set:
+                chain_rules.append(rule)
 
-        # 現在の質問を含むルール（pending_rules）をベースとする
-        if not self.pending_rules:
-            return []
-
-        # pending_rulesのアクションを収集
-        actions_to_check = set()
-        for rule in self.pending_rules:
-            chain_rules.append(rule)
-            for action in rule.actions:
-                actions_to_check.add(action)
-
-        # 依存関係を逆向きに辿る：これらのアクションを条件として使っている未発火ルールを探す
-        visited = set(r.name for r in self.pending_rules)
-
-        while actions_to_check:
-            current_actions = actions_to_check.copy()
-            actions_to_check.clear()
-
-            for rule_name, rule in self.collection_of_rules.items():
-                # 既に発火したルール、または既に追加したルールはスキップ
-                if rule.is_fired() or rule.name in visited:
-                    continue
-
-                # このルールの条件に、current_actionsのいずれかが含まれているかチェック
-                for condition in rule.conditions:
-                    if condition in current_actions:
-                        chain_rules.append(rule)
-                        visited.add(rule.name)
-                        # このルールのアクションも次のチェック対象に追加
-                        for action in rule.actions:
-                            actions_to_check.add(action)
-                        break
-
-        # ルールを番号順にソート
         chain_rules.sort(key=lambda r: int(r.name) if r.name.isdigit() else float('inf'))
 
         # ルール情報を構築

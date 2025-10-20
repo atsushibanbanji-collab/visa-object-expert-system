@@ -366,7 +366,12 @@ const ConsultationForm = () => {
           {/* 推論チェーン表示 */}
           {reasoningChain && reasoningChain.length > 0 && (
             <div className="reasoning-chain">
-              <h3 className="reasoning-title">RULES BEING EVALUATED（評価中のルール）</h3>
+              <h3 className="reasoning-title">
+                RULES BEING EVALUATED（評価中のルール）
+                <span style={{fontSize: '0.8rem', marginLeft: '1rem', color: '#666'}}>
+                  {reasoningChain.length}件のルール
+                </span>
+              </h3>
               {reasoningChain.map((rule, ruleIdx) => (
                 <div key={ruleIdx} className="reasoning-rule">
                   <div className="rule-header">
