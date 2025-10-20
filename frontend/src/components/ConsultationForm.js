@@ -440,13 +440,39 @@ const ConsultationForm = () => {
               {(!reasoningChain || reasoningChain.length === 0) ? (
                 <p className="debug-empty">評価中のルールがありません</p>
               ) : (
-                <div className="simple-rules-list">
+                <div className="debug-rules-list">
                   {reasoningChain.map((rule, index) => (
-                    <div key={index} className="simple-rule-item">
-                      <span className="simple-rule-name">ルール {rule.rule_name}</span>
-                      <span className={`debug-badge ${rule.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
-                        {rule.rule_type}
-                      </span>
+                    <div key={index} className="debug-rule-item">
+                      <div className="debug-rule-header">
+                        <span className="debug-rule-name">ルール {rule.rule_name}</span>
+                        <span className={`debug-badge ${rule.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
+                          {rule.rule_type}
+                        </span>
+                        <span className={`debug-badge logic ${rule.condition_logic}`}>
+                          {rule.condition_logic}
+                        </span>
+                      </div>
+                      <div className="debug-rule-conditions">
+                        <strong>条件:</strong>
+                        <ul>
+                          {rule.conditions.map((cond, i) => (
+                            <li key={i} className={cond.status === 'satisfied' ? 'true' : cond.status === 'unsatisfied' ? 'false' : 'unknown'}>
+                              <span className={`debug-icon ${cond.status === 'satisfied' ? 'true' : cond.status === 'unsatisfied' ? 'false' : 'unknown'}`}>
+                                {cond.status === 'satisfied' ? '✓' : cond.status === 'unsatisfied' ? '✗' : '?'}
+                              </span>
+                              {cond.text}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="debug-rule-actions">
+                        <strong>結論:</strong>
+                        <ul>
+                          {rule.actions.map((action, i) => (
+                            <li key={i}>→ {action}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   ))}
                 </div>
