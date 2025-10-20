@@ -33,6 +33,8 @@ class ConsultationResponse(BaseModel):
     applied_rule: Optional[str] = None
     question: Optional[str] = None
     applied_rules: Optional[list] = None  # 適用されたルールの履歴
+    reasoning_chain: Optional[list] = None  # 評価中のルールチェーン
+    debug_pending_rules: Optional[list] = None  # デバッグ用
 
 
 @router.post("/start", response_model=ConsultationResponse)
