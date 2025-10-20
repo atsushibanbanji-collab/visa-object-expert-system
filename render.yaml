@@ -3,8 +3,11 @@ services:
   - type: web
     name: visa-expert-backend
     env: python
-    plan: free
     region: oregon
+    disk:
+      name: visa-db
+      mountPath: /data
+      sizeGB: 1
     buildCommand: pip install -r backend/requirements.txt && python -m backend.migrate_rules
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -12,6 +15,8 @@ services:
         value: 3.11.0
       - key: USE_DATABASE_RULES
         value: "true"
+      - key: DATABASE_DIR
+        value: /data
 
   # フロントエンド（React）- 静的サイトとして配信
   - type: web

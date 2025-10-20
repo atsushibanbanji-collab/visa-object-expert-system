@@ -30,7 +30,7 @@ RULE_VISA_MAPPING = {
 
 def migrate_rules():
     """
-    既存のルールをデータベースに移行
+    既存のルールをデータベースに移行（ルールがない場合のみ）
     """
     # データベースを初期化
     print("🗄️  データベースを初期化しています...")
@@ -40,10 +40,11 @@ def migrate_rules():
     db = SessionLocal()
 
     try:
-        # 既存のルールをすべて削除
-        print("🗑️  既存のルールを削除しています...")
-        db.query(RuleDB).delete()
-        db.commit()
+        # 既存のルール数を確認
+        existing_count = db.query(RuleDB).count()
+        if existing_count > 0:
+            print(f"✅ データベースには既に {existing_count} 件のルールが存在します。移行をスキップします。")
+            return
 
         # 各ルールクラスをインスタンス化してデータベースに保存
         rule_classes = [
