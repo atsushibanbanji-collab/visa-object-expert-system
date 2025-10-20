@@ -13,6 +13,7 @@ const ConsultationForm = () => {
   const [impossible, setImpossible] = useState(false);
   const [appliedRules, setAppliedRules] = useState([]);  // 適用されたルールの履歴（結果画面用）
   const [debugInfo, setDebugInfo] = useState({ findings: {}, hypotheses: {}, conflict_set: [], applied_rules: [] });  // デバッグ用の推論状態
+  const [reasoningChain, setReasoningChain] = useState([]);  // 現在の推論チェーン
 
   // 推論状態を取得する関数
   const fetchDebugInfo = async () => {
@@ -39,13 +40,16 @@ const ConsultationForm = () => {
 
       if (response.data.status === 'need_input') {
         setCurrentQuestion(response.data.question);
+        setReasoningChain(response.data.reasoning_chain || []);
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
         setAppliedRules(response.data.applied_rules || []);
         setCompleted(true);
+        setReasoningChain([]);
       } else if (response.data.status === 'impossible') {
         setImpossible(true);
         setCompleted(true);
+        setReasoningChain([]);
       }
 
       // 推論状態を取得（デバッグ用）
@@ -74,15 +78,18 @@ const ConsultationForm = () => {
       // 次の質問または結果を処理
       if (response.data.status === 'need_input') {
         setCurrentQuestion(response.data.question);
+        setReasoningChain(response.data.reasoning_chain || []);
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
         setAppliedRules(response.data.applied_rules || []);
         setCompleted(true);
         setCurrentQuestion('');
+        setReasoningChain([]);
       } else if (response.data.status === 'impossible') {
         setImpossible(true);
         setCompleted(true);
         setCurrentQuestion('');
+        setReasoningChain([]);
       }
 
       // 推論状態を取得（デバッグ用）
@@ -127,6 +134,7 @@ const ConsultationForm = () => {
       // 次の質問または状態を処理
       if (response.data.status === 'need_input') {
         setCurrentQuestion(response.data.question);
+        setReasoningChain(response.data.reasoning_chain || []);
         setCompleted(false);
         setImpossible(false);
       } else if (response.data.status === 'completed') {
@@ -134,6 +142,7 @@ const ConsultationForm = () => {
         setAppliedRules(response.data.applied_rules || []);
         setCompleted(true);
         setCurrentQuestion('');
+        setReasoningChain([]);
       } else if (response.data.status === 'impossible') {
         setImpossible(true);
         setCompleted(true);
@@ -353,6 +362,45 @@ const ConsultationForm = () => {
           <div className="progress-indicator">
             <span className="progress-count">質問 {questionHistory.length + 1}</span>
           </div>
+
+          {/* 推論チェーン表示 */}
+          {reasoningChain && reasoningChain.length > 0 && (
+            <div className="reasoning-chain">
+              <h3 className="reasoning-title">推論の流れ</h3>
+              {reasoningChain.map((rule, ruleIdx) => (
+                <div key={ruleIdx} className="reasoning-rule">
+                  <div className="rule-header">
+                    <span className="rule-name">ルール {rule.rule_name}</span>
+                    <span className={`rule-type-badge ${rule.rule_type}`}>{rule.rule_type}</span>
+                  </div>
+                  <div className="rule-conditions">
+                    <div className="conditions-header">
+                      条件 <span className="logic-badge">{rule.condition_logic}</span>
+                    </div>
+                    <ul className="conditions-list">
+                      {rule.conditions.map((cond, condIdx) => (
+                        <li key={condIdx} className={`condition-item status-${cond.status}`}>
+                          {cond.status === 'satisfied' && <span className="status-icon">✓</span>}
+                          {cond.status === 'unsatisfied' && <span className="status-icon">✗</span>}
+                          {cond.status === 'unknown' && <span className="status-icon">?</span>}
+                          {cond.status === 'current' && <span className="status-icon">→</span>}
+                          {cond.text}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rule-actions">
+                    <div className="actions-header">結論</div>
+                    <ul className="actions-list">
+                      {rule.actions.map((action, actionIdx) => (
+                        <li key={actionIdx} className="action-item">{action}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <h2>{currentQuestion}</h2>
 

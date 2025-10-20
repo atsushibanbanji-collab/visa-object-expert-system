@@ -76,7 +76,8 @@ class Consultation:
                 "status": "need_input",
                 "message": "次の質問に答えてください",
                 "question": next_question,
-                "need_input": True
+                "need_input": True,
+                "reasoning_chain": self._build_reasoning_chain(next_question)
             }
 
         # 質問もルールもない場合は推論完了
@@ -499,3 +500,50 @@ class Consultation:
 
         # 復元後に推論を実行して次の質問を取得
         return self.start_deduce()
+
+    def _build_reasoning_chain(self, current_question: str) -> List[Dict[str, Any]]:
+        """
+        現在の質問に関連する推論チェーンを構築
+
+        Args:
+            current_question: 現在の質問
+
+        Returns:
+            推論チェーン情報のリスト
+        """
+        chain = []
+
+        # pending_rulesから推論チェーンを構築
+        for rule in self.pending_rules:
+            rule_info = {
+                "rule_name": rule.name,
+                "rule_type": rule.type,
+                "condition_logic": rule.condition_logic,
+                "conditions": [],
+                "actions": rule.actions.copy()
+            }
+
+            # 各条件の状態を評価
+            for condition in rule.conditions:
+                condition_info = {
+                    "text": condition,
+                    "status": "unknown",  # "satisfied", "unsatisfied", "unknown", "current"
+                    "is_current": condition == current_question
+                }
+
+                if condition == current_question:
+                    condition_info["status"] = "current"
+                else:
+                    value = self.status.get_value(condition)
+                    if value is True:
+                        condition_info["status"] = "satisfied"
+                    elif value is False:
+                        condition_info["status"] = "unsatisfied"
+                    else:
+                        condition_info["status"] = "unknown"
+
+                rule_info["conditions"].append(condition_info)
+
+            chain.append(rule_info)
+
+        return chain

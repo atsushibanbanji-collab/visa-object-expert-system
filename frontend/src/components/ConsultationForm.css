@@ -1075,3 +1075,198 @@
     width: 100%;
   }
 }
+
+/* 推論チェーン表示 */
+.reasoning-chain {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.reasoning-title {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.reasoning-rule {
+  background: white;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.reasoning-rule:last-child {
+  margin-bottom: 0;
+}
+
+.rule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rule-name {
+  font-weight: 600;
+  color: #2c5282;
+  font-size: 0.95rem;
+}
+
+.rule-type-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.rule-type-badge.\\#n\\! {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.rule-type-badge.\\#i {
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.rule-conditions,
+.rule-actions {
+  margin-bottom: 0.75rem;
+}
+
+.rule-actions:last-child {
+  margin-bottom: 0;
+}
+
+.conditions-header,
+.actions-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logic-badge {
+  padding: 0.15rem 0.4rem;
+  background: #333;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: monospace;
+  border-radius: 3px;
+}
+
+.conditions-list,
+.actions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.condition-item,
+.action-item {
+  padding: 0.5rem;
+  margin-bottom: 0.35rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.condition-item:last-child,
+.action-item:last-child {
+  margin-bottom: 0;
+}
+
+.condition-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* 条件の状態別スタイル */
+.status-satisfied {
+  background: #c6f6d5;
+  border-left: 3px solid #38a169;
+}
+
+.status-satisfied .status-icon {
+  background: #38a169;
+  color: white;
+}
+
+.status-unsatisfied {
+  background: #fed7d7;
+  border-left: 3px solid #e53e3e;
+}
+
+.status-unsatisfied .status-icon {
+  background: #e53e3e;
+  color: white;
+}
+
+.status-unknown {
+  background: #e2e8f0;
+  border-left: 3px solid #718096;
+}
+
+.status-unknown .status-icon {
+  background: #718096;
+  color: white;
+}
+
+.status-current {
+  background: #fef5e7;
+  border-left: 3px solid #d69e2e;
+  font-weight: 600;
+}
+
+.status-current .status-icon {
+  background: #d69e2e;
+  color: white;
+}
+
+.action-item {
+  background: #edf2f7;
+  border-left: 3px solid #4a5568;
+  color: #2d3748;
+}
+
+@media (max-width: 768px) {
+  .reasoning-chain {
+    padding: 1rem;
+  }
+
+  .reasoning-rule {
+    padding: 0.75rem;
+  }
+
+  .condition-item,
+  .action-item {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+  }
+}
