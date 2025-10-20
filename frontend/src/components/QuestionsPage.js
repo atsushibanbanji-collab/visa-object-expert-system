@@ -47,6 +47,22 @@ const QuestionsPage = ({ onBack }) => {
 
   const visaData = questionsData[selectedVisa];
 
+  // 全ルールのアクション（導出可能な仮説）を収集
+  const getAllActions = () => {
+    const actions = new Set();
+    visaData.rules.forEach(rule => {
+      rule.actions.forEach(action => actions.add(action));
+    });
+    return actions;
+  };
+
+  const allActions = getAllActions();
+
+  // 条件が他のルールのアクションとして導出されるかチェック
+  const isDerivedCondition = (condition) => {
+    return allActions.has(condition);
+  };
+
   return (
     <div className="questions-container">
       <div className="questions-card">
@@ -114,7 +130,10 @@ const QuestionsPage = ({ onBack }) => {
                       </h4>
                       <ul>
                         {rule.conditions.map((cond, i) => (
-                          <li key={i}>{cond}</li>
+                          <li key={i} className={isDerivedCondition(cond) ? 'derived-condition' : 'user-question'}>
+                            {isDerivedCondition(cond) && <span className="condition-badge">仮説</span>}
+                            {cond}
+                          </li>
                         ))}
                       </ul>
                     </div>

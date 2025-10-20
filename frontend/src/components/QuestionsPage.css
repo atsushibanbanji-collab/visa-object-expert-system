@@ -293,3 +293,28 @@
     gap: 1rem;
   }
 }
+
+/* 条件の色分け */
+.derived-condition {
+  color: #2563eb;
+  font-weight: 500;
+  background: #eff6ff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border-left: 3px solid #3b82f6;
+}
+
+.user-question {
+  color: #374151;
+}
+
+.condition-badge {
+  display: inline-block;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  font-weight: 600;
+}
