@@ -25,6 +25,7 @@ class Consultation:
         self.conflict_set: List = []
         self.applied_rules: List = []  # 適用されたルールの履歴
         self.pending_rules: List = []  # 評価待ちのルール（質問中）
+        self.evaluating_rules: set = set()  # 推論が開始されたルール名のセット（fireするまで保持）
         self.history_stack: List[Dict[str, Any]] = []  # 各ステップのスナップショット
 
         # ルールをコレクションに追加
@@ -41,6 +42,7 @@ class Consultation:
         # 競合集合を初期化
         self.conflict_set = []
         self.pending_rules = []
+        self.evaluating_rules = set()
 
         # 推論を開始
         return self.start_deduce()
@@ -72,10 +74,15 @@ class Consultation:
             # この質問を含む未発火ルールをpending_rulesに格納
             self.pending_rules = self._get_rules_with_condition(next_question)
 
+            # pending_rulesのルールをevaluating_rulesに追加（推論が開始されたことを記録）
+            for rule in self.pending_rules:
+                self.evaluating_rules.add(rule.name)
+
             # デバッグ情報
             pending_rule_names = [r.name for r in self.pending_rules]
             print(f"DEBUG: next_question='{next_question}'")
             print(f"DEBUG: pending_rules={pending_rule_names}")
+            print(f"DEBUG: evaluating_rules={self.evaluating_rules}")
 
             reasoning_chain = self._build_reasoning_chain(next_question)
             print(f"DEBUG: reasoning_chain length={len(reasoning_chain)}")
@@ -193,6 +200,9 @@ class Consultation:
 
         # ルールを発火済みにする
         rule.hoist_flag()
+
+        # evaluating_rulesから削除（fireしたので評価完了）
+        self.evaluating_rules.discard(rule.name)
 
         # ルールのタイプに応じて次の処理を決定
         if rule.type == "#n!":  # 終了ルール
@@ -458,6 +468,7 @@ class Consultation:
         self.conflict_set = []
         self.applied_rules = []  # 適用ルール履歴もリセット
         self.pending_rules = []  # 評価待ちルールもリセット
+        self.evaluating_rules = set()  # 評価中ルールもリセット
         self.history_stack = []  # 履歴スタックもリセット
 
         # すべてのルールの flag をリセット
@@ -476,7 +487,8 @@ class Consultation:
             "findings": copy.deepcopy(self.status.findings),
             "hypotheses": copy.deepcopy(self.status.hypotheses),
             "applied_rules": copy.deepcopy(self.applied_rules),
-            "rule_flags": {rule_name: rule.flag for rule_name, rule in self.collection_of_rules.items()}
+            "rule_flags": {rule_name: rule.flag for rule_name, rule in self.collection_of_rules.items()},
+            "evaluating_rules": copy.deepcopy(self.evaluating_rules)
         }
         self.history_stack.append(snapshot)
 
@@ -502,6 +514,7 @@ class Consultation:
         self.status.findings = snapshot["findings"]
         self.status.hypotheses = snapshot["hypotheses"]
         self.applied_rules = snapshot["applied_rules"]
+        self.evaluating_rules = snapshot.get("evaluating_rules", set())
 
         # ルールのフラグを復元
         for rule_name, flag in snapshot["rule_flags"].items():
@@ -513,7 +526,8 @@ class Consultation:
 
     def _build_reasoning_chain(self, current_question: str) -> List[Dict[str, Any]]:
         """
-        評価中のルールチェーンを構築（依存関係チェーン + 部分的に満たされているルール）
+        評価中のルールチェーンを構築
+        evaluating_rulesに含まれる未発火のルールを表示する
 
         Args:
             current_question: 現在の質問
@@ -521,60 +535,16 @@ class Consultation:
         Returns:
             推論チェーン情報のリスト（ルール番号順）
         """
-        chain_rules_set = set()
-
-        # 1. pending_rulesから依存関係チェーンを構築
-        if self.pending_rules:
-            for rule in self.pending_rules:
-                chain_rules_set.add(rule.name)
-
-            # pending_rulesのアクションを収集
-            actions_to_check = set()
-            for rule in self.pending_rules:
-                for action in rule.actions:
-                    actions_to_check.add(action)
-
-            # 依存関係を順向きに辿る：これらのアクションを条件として使っている未発火ルールを探す
-            while actions_to_check:
-                current_actions = actions_to_check.copy()
-                actions_to_check.clear()
-
-                for rule_name, rule in self.collection_of_rules.items():
-                    # 既に発火したルール、または既に追加したルールはスキップ
-                    if rule.is_fired() or rule.name in chain_rules_set:
-                        continue
-
-                    # このルールの条件に、current_actionsのいずれかが含まれているかチェック
-                    for condition in rule.conditions:
-                        if condition in current_actions:
-                            chain_rules_set.add(rule.name)
-                            # このルールのアクションも次のチェック対象に追加
-                            for action in rule.actions:
-                                actions_to_check.add(action)
-                            break
-
-        # 2. 条件が部分的に満たされているルール（少なくとも1つの条件がTrue/False）を追加
-        for rule_name, rule in self.collection_of_rules.items():
-            if rule.is_fired() or rule.name in chain_rules_set:
-                continue
-
-            # このルールの条件のいずれかが既に回答されているかチェック
-            has_answered_condition = False
-            for condition in rule.conditions:
-                value = self.status.get_value(condition)
-                if value is not None:  # True or False
-                    has_answered_condition = True
-                    break
-
-            if has_answered_condition:
-                chain_rules_set.add(rule.name)
-
-        # ルールオブジェクトを取得してソート
+        # evaluating_rulesに含まれる未発火のルールを取得
         chain_rules = []
-        for rule_name, rule in self.collection_of_rules.items():
-            if rule.name in chain_rules_set:
-                chain_rules.append(rule)
+        for rule_name in self.evaluating_rules:
+            if rule_name in self.collection_of_rules:
+                rule = self.collection_of_rules[rule_name]
+                # 発火していないルールのみ追加
+                if not rule.is_fired():
+                    chain_rules.append(rule)
 
+        # ルール番号順にソート
         chain_rules.sort(key=lambda r: int(r.name) if r.name.isdigit() else float('inf'))
 
         # ルール情報を構築
