@@ -440,3 +440,28 @@
     font-size: 0.9rem;
   }
 }
+
+/* 条件の色分け */
+.rule-text-item.derived-condition {
+  color: #2563eb;
+  font-weight: 500;
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+.rule-text-item.user-question {
+  color: #333;
+  background: #f9f9f9;
+  border-left: 2px solid #ddd;
+}
+
+.condition-badge {
+  display: inline-block;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  margin-right: 0.5rem;
+  font-weight: 600;
+}

@@ -49,6 +49,22 @@ const RuleManagementPage = () => {
     fetchRules();
   }, [visaTypeFilter]);
 
+  // 全ルールのアクション（導出可能な仮説）を収集
+  const getAllActions = () => {
+    const actions = new Set();
+    rules.forEach(rule => {
+      rule.actions.forEach(action => actions.add(action));
+    });
+    return actions;
+  };
+
+  const allActions = getAllActions();
+
+  // 条件が他のルールのアクションとして導出されるかチェック
+  const isDerivedCondition = (condition) => {
+    return allActions.has(condition);
+  };
+
   // 新規作成フォームを開く
   const handleCreateNew = () => {
     setEditingRule(null);
@@ -458,13 +474,14 @@ const RuleManagementPage = () => {
                   <td>
                     <div className="rule-text-list">
                       {rule.conditions.map((condition, idx) => (
-                        <div key={idx} className="rule-text-item">
+                        <div key={idx} className={`rule-text-item ${isDerivedCondition(condition) ? 'derived-condition' : 'user-question'}`}>
                           {rule.condition_logic === 'OR' && idx > 0 && (
                             <span className="logic-separator">OR</span>
                           )}
                           {rule.condition_logic === 'AND' && idx > 0 && (
                             <span className="logic-separator">AND</span>
                           )}
+                          {isDerivedCondition(condition) && <span className="condition-badge">仮説</span>}
                           {condition}
                         </div>
                       ))}
