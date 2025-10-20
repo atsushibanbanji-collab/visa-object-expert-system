@@ -605,13 +605,13 @@
   font-family: monospace;
 }
 
-.inference-badge.\#n\! {
+.inference-badge.final {
   background: #f5f5f5;
   color: #666;
   border-color: #999;
 }
 
-.inference-badge.\#i {
+.inference-badge.intermediate {
   background: #f5f5f5;
   color: #666;
   border-color: #999;
@@ -893,13 +893,13 @@
   font-family: monospace;
 }
 
-.debug-badge.\#n\! {
+.debug-badge.final {
   background: #f5f5f5;
   color: #666;
   border-color: #999;
 }
 
-.debug-badge.\#i {
+.debug-badge.intermediate {
   background: #f5f5f5;
   color: #666;
   border-color: #999;
@@ -1127,12 +1127,12 @@
   font-family: monospace;
 }
 
-.rule-type-badge.\\#n\\! {
+.rule-type-badge.final {
   background: #fed7d7;
   color: #742a2a;
 }
 
-.rule-type-badge.\\#i {
+.rule-type-badge.intermediate {
   background: #bee3f8;
   color: #2c5282;
 }

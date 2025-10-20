@@ -301,7 +301,7 @@ const ConsultationForm = () => {
                   <div key={index} className="inference-item">
                     <div className="inference-header">
                       <span className="inference-rule-number">ルール {ruleInfo.rule_name}</span>
-                      <span className={`inference-badge ${ruleInfo.rule_type}`}>
+                      <span className={`inference-badge ${ruleInfo.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
                         {ruleInfo.rule_type === '#n!' ? '終了ルール' : '中間ルール'}
                       </span>
                       <span className={`inference-badge logic ${ruleInfo.condition_logic}`}>
@@ -371,7 +371,7 @@ const ConsultationForm = () => {
                 <div key={ruleIdx} className="reasoning-rule">
                   <div className="rule-header">
                     <span className="rule-name">ルール {rule.rule_name}</span>
-                    <span className={`rule-type-badge ${rule.rule_type}`}>{rule.rule_type}</span>
+                    <span className={`rule-type-badge ${rule.rule_type === '#n!' ? 'final' : 'intermediate'}`}>{rule.rule_type}</span>
                   </div>
                   <div className="rule-conditions">
                     <div className="conditions-header">
@@ -484,7 +484,7 @@ const ConsultationForm = () => {
                     <div key={index} className="debug-rule-item">
                       <div className="debug-rule-header">
                         <span className="debug-rule-name">ルール {ruleInfo.rule_name}</span>
-                        <span className={`debug-badge ${ruleInfo.rule_type}`}>
+                        <span className={`debug-badge ${ruleInfo.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
                           {ruleInfo.rule_type}
                         </span>
                         <span className={`debug-badge logic ${ruleInfo.condition_logic}`}>
@@ -535,7 +535,7 @@ const ConsultationForm = () => {
                     <div key={index} className="debug-rule-item">
                       <div className="debug-rule-header">
                         <span className="debug-rule-name">ルール {ruleInfo.rule_name}</span>
-                        <span className={`debug-badge ${ruleInfo.rule_type}`}>
+                        <span className={`debug-badge ${ruleInfo.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
                           {ruleInfo.rule_type}
                         </span>
                         <span className={`debug-badge logic ${ruleInfo.condition_logic}`}>

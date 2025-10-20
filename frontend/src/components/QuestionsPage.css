@@ -190,12 +190,12 @@
   font-weight: 700;
 }
 
-.rule-type.\#i {
+.rule-type.intermediate {
   background: #bee3f8;
   color: #2c5282;
 }
 
-.rule-type.\#n\! {
+.rule-type.final {
   background: #fed7d7;
   color: #742a2a;
 }
