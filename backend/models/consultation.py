@@ -503,28 +503,55 @@ class Consultation:
 
     def _build_reasoning_chain(self, current_question: str) -> List[Dict[str, Any]]:
         """
-        評価中のルールチェーンを構築（未発火のルールをすべて含む）
+        評価中のルールチェーンを構築（依存関係があるルールのみ）
 
         Args:
             current_question: 現在の質問
 
         Returns:
-            推論チェーン情報のリスト（優先順位順）
+            推論チェーン情報のリスト（依存関係の逆順、ルール番号順）
         """
+        chain_rules = []
+
+        # 現在の質問を含むルール（pending_rules）をベースとする
+        if not self.pending_rules:
+            return []
+
+        # pending_rulesのアクションを収集
+        actions_to_check = set()
+        for rule in self.pending_rules:
+            chain_rules.append(rule)
+            for action in rule.actions:
+                actions_to_check.add(action)
+
+        # 依存関係を逆向きに辿る：これらのアクションを条件として使っている未発火ルールを探す
+        visited = set(r.name for r in self.pending_rules)
+
+        while actions_to_check:
+            current_actions = actions_to_check.copy()
+            actions_to_check.clear()
+
+            for rule_name, rule in self.collection_of_rules.items():
+                # 既に発火したルール、または既に追加したルールはスキップ
+                if rule.is_fired() or rule.name in visited:
+                    continue
+
+                # このルールの条件に、current_actionsのいずれかが含まれているかチェック
+                for condition in rule.conditions:
+                    if condition in current_actions:
+                        chain_rules.append(rule)
+                        visited.add(rule.name)
+                        # このルールのアクションも次のチェック対象に追加
+                        for action in rule.actions:
+                            actions_to_check.add(action)
+                        break
+
+        # ルールを番号順にソート
+        chain_rules.sort(key=lambda r: int(r.name) if r.name.isdigit() else float('inf'))
+
+        # ルール情報を構築
         chain = []
-
-        # すべての未発火ルールを評価対象として表示
-        unfired_rules = []
-        for rule_name, rule in self.collection_of_rules.items():
-            # 既に発火したルールはスキップ
-            if rule.is_fired():
-                continue
-            unfired_rules.append(rule)
-
-        # ルールを優先順位順にソート（ルール名の数値順）
-        unfired_rules.sort(key=lambda r: int(r.name) if r.name.isdigit() else float('inf'))
-
-        for rule in unfired_rules:
+        for rule in chain_rules:
             rule_info = {
                 "rule_name": rule.name,
                 "rule_type": rule.type,
@@ -537,7 +564,7 @@ class Consultation:
             for condition in rule.conditions:
                 condition_info = {
                     "text": condition,
-                    "status": "unknown",  # "satisfied", "unsatisfied", "unknown", "current"
+                    "status": "unknown",
                     "is_current": condition == current_question
                 }
 
