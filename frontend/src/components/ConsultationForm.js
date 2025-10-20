@@ -363,50 +363,6 @@ const ConsultationForm = () => {
             <span className="progress-count">質問 {questionHistory.length + 1}</span>
           </div>
 
-          {/* 推論チェーン表示 */}
-          {reasoningChain && reasoningChain.length > 0 && (
-            <div className="reasoning-chain">
-              <h3 className="reasoning-title">
-                RULES BEING EVALUATED（評価中のルール）
-                <span style={{fontSize: '0.8rem', marginLeft: '1rem', color: '#666'}}>
-                  {reasoningChain.length}件のルール
-                </span>
-              </h3>
-              {reasoningChain.map((rule, ruleIdx) => (
-                <div key={ruleIdx} className="reasoning-rule">
-                  <div className="rule-header">
-                    <span className="rule-name">ルール {rule.rule_name}</span>
-                    <span className={`rule-type-badge ${rule.rule_type === '#n!' ? 'final' : 'intermediate'}`}>{rule.rule_type}</span>
-                  </div>
-                  <div className="rule-conditions">
-                    <div className="conditions-header">
-                      条件 <span className="logic-badge">{rule.condition_logic}</span>
-                    </div>
-                    <ul className="conditions-list">
-                      {rule.conditions.map((cond, condIdx) => (
-                        <li key={condIdx} className={`condition-item status-${cond.status}`}>
-                          {cond.status === 'satisfied' && <span className="status-icon">✓</span>}
-                          {cond.status === 'unsatisfied' && <span className="status-icon">✗</span>}
-                          {cond.status === 'unknown' && <span className="status-icon">?</span>}
-                          {cond.status === 'current' && <span className="status-icon">→</span>}
-                          {cond.text}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="rule-actions">
-                    <div className="actions-header">結論</div>
-                    <ul className="actions-list">
-                      {rule.actions.map((action, actionIdx) => (
-                        <li key={actionIdx} className="action-item">{action}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
           <h2>{currentQuestion}</h2>
 
           <div className="answer-buttons">
@@ -477,50 +433,20 @@ const ConsultationForm = () => {
         <div className="debug-panel">
           <h3 className="debug-title">INFERENCE PROCESS</h3>
 
-          {/* 評価中のルール */}
+          {/* 評価中のルール（まだ決まっていないルール） */}
           <div className="debug-section">
             <h4 className="debug-section-title">RULES BEING EVALUATED</h4>
             <div className="debug-content">
-              {(!debugInfo.conflict_set || debugInfo.conflict_set.length === 0) ? (
+              {(!reasoningChain || reasoningChain.length === 0) ? (
                 <p className="debug-empty">評価中のルールがありません</p>
               ) : (
-                <div className="debug-rules-list">
-                  {debugInfo.conflict_set.map((ruleInfo, index) => (
-                    <div key={index} className="debug-rule-item">
-                      <div className="debug-rule-header">
-                        <span className="debug-rule-name">ルール {ruleInfo.rule_name}</span>
-                        <span className={`debug-badge ${ruleInfo.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
-                          {ruleInfo.rule_type}
-                        </span>
-                        <span className={`debug-badge logic ${ruleInfo.condition_logic}`}>
-                          {ruleInfo.condition_logic}
-                        </span>
-                      </div>
-                      <div className="debug-rule-conditions">
-                        <strong>条件:</strong>
-                        <ul>
-                          {ruleInfo.conditions.map((condition, i) => {
-                            const value = ruleInfo.satisfied_conditions[condition];
-                            const hasValue = condition in ruleInfo.satisfied_conditions;
-                            return (
-                              <li key={i} className={hasValue ? (value ? 'true' : 'false') : 'unknown'}>
-                                <span className={`debug-icon ${hasValue ? (value ? 'true' : 'false') : 'unknown'}`}>
-                                  {hasValue ? (value ? '✓' : '✗') : '?'}
-                                </span>
-                                {condition}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </div>
-                      <div className="debug-rule-actions">
-                        <strong>結論:</strong>
-                        <ul>
-                          {ruleInfo.actions.map((action, i) => (
-                            <li key={i}>→ {action}</li>
-                          ))}
-                        </ul>
-                      </div>
+                <div className="simple-rules-list">
+                  {reasoningChain.map((rule, index) => (
+                    <div key={index} className="simple-rule-item">
+                      <span className="simple-rule-name">ルール {rule.rule_name}</span>
+                      <span className={`debug-badge ${rule.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
+                        {rule.rule_type}
+                      </span>
                     </div>
                   ))}
                 </div>
