@@ -40,11 +40,14 @@ def migrate_rules():
     db = SessionLocal()
 
     try:
-        # 既存のルール数を確認
-        existing_count = db.query(RuleDB).count()
-        if existing_count > 0:
-            print(f"✅ データベースには既に {existing_count} 件のルールが存在します。移行をスキップします。")
-            return
+        # 既存のルール数を確認（テーブルが存在しない場合はスキップ）
+        try:
+            existing_count = db.query(RuleDB).count()
+            if existing_count > 0:
+                print(f"✅ データベースには既に {existing_count} 件のルールが存在します。移行をスキップします。")
+                return
+        except Exception as e:
+            print(f"📝 データベーステーブルがまだ存在しないため、ルールを移行します。")
 
         # 各ルールクラスをインスタンス化してデータベースに保存
         rule_classes = [

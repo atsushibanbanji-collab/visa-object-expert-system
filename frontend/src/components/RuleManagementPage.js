@@ -685,7 +685,6 @@ const RuleManagementPage = () => {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 };
