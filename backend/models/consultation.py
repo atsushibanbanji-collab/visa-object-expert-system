@@ -201,8 +201,7 @@ class Consultation:
         # ルールを発火済みにする
         rule.hoist_flag()
 
-        # evaluating_rulesから削除（fireしたので評価完了）
-        self.evaluating_rules.discard(rule.name)
+        # evaluating_rulesからは削除しない（fireしたルールも表示し続けるため）
 
         # ルールのタイプに応じて次の処理を決定
         if rule.type == "#n!":  # 終了ルール
