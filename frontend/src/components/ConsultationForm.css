@@ -862,6 +862,16 @@
   border-bottom: none;
 }
 
+.debug-rule-item.fired {
+  background: #f0f9ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.debug-rule-item.evaluating {
+  background: white;
+  border-left: 4px solid #f59e0b;
+}
+
 .debug-rule-item:last-child {
   border-bottom: 1px solid #ddd;
 }
@@ -915,6 +925,20 @@
   background: #666;
   color: #fff;
   border-color: #666;
+}
+
+.debug-badge.fired-badge {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+.priority-badge {
+  margin-left: 0.5rem;
+  font-size: 0.55rem;
+  color: #666;
+  font-weight: normal;
+  font-family: monospace;
 }
 
 .debug-rule-conditions,

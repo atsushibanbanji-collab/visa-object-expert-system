@@ -527,25 +527,23 @@ class Consultation:
     def _build_reasoning_chain(self, current_question: str) -> List[Dict[str, Any]]:
         """
         評価中のルールチェーンを構築
-        evaluating_rulesに含まれる未発火のルールを表示する
+        evaluating_rulesに含まれる全てのルール（fireしたものも含む）を表示
 
         Args:
             current_question: 現在の質問
 
         Returns:
-            推論チェーン情報のリスト（ルール番号順）
+            推論チェーン情報のリスト（優先度順）
         """
-        # evaluating_rulesに含まれる未発火のルールを取得
+        # evaluating_rulesに含まれる全てのルールを取得（fireしたものも含む）
         chain_rules = []
         for rule_name in self.evaluating_rules:
             if rule_name in self.collection_of_rules:
                 rule = self.collection_of_rules[rule_name]
-                # 発火していないルールのみ追加
-                if not rule.is_fired():
-                    chain_rules.append(rule)
+                chain_rules.append(rule)
 
-        # ルール番号順にソート
-        chain_rules.sort(key=lambda r: int(r.name) if r.name.isdigit() else float('inf'))
+        # 優先度順にソート
+        chain_rules.sort(key=lambda r: r.priority)
 
         # ルール情報を構築
         chain = []
@@ -555,7 +553,9 @@ class Consultation:
                 "rule_type": rule.type,
                 "condition_logic": rule.condition_logic,
                 "conditions": [],
-                "actions": rule.actions.copy()
+                "actions": rule.actions.copy(),
+                "is_fired": rule.is_fired(),  # fireしたかどうか
+                "priority": rule.priority  # 優先度
             }
 
             # 各条件の状態を評価

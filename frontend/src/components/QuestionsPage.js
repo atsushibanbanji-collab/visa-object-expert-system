@@ -117,7 +117,7 @@ const QuestionsPage = ({ onBack }) => {
               {visaData.rules.map((rule, index) => (
                 <details key={index} className="rule-item">
                   <summary className="rule-summary">
-                    ルール {rule.name}
+                    {rule.name}
                     <span className={`rule-type ${rule.type === '#n!' ? 'final' : 'intermediate'}`}>{rule.type}</span>
                   </summary>
                   <div className="rule-details">

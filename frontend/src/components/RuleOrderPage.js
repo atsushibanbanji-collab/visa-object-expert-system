@@ -199,7 +199,7 @@ const RuleOrderPage = () => {
 
               <div className="rule-content">
                 <div className="rule-main-info">
-                  <span className="rule-name">ルール {rule.name}</span>
+                  <span className="rule-name">{rule.name}</span>
                   <div className="rule-badges">
                     <span className={`badge ${rule.rule_type === '#n!' ? 'final' : 'intermediate'}`}>
                       {rule.rule_type}
