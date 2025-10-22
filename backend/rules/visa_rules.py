@@ -18,7 +18,8 @@ class VisaRule1(Rule):
                 "申請者がEビザの条件を満たします"
             ],
             actions=["Eビザでの申請ができます"],
-            rule_type="#n!"
+            rule_type="#n!",
+            priority=1
         )
 
     def check_conditions(self, working_memory) -> bool:
@@ -45,7 +46,8 @@ class VisaRule2(Rule):
             ],
             actions=["会社がEビザの条件を満たします"],
             rule_type="#i",
-            condition_logic="OR"
+            condition_logic="OR",
+            priority=2
         )
 
     def check_conditions(self, working_memory) -> bool:

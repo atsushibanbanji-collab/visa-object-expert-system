@@ -26,7 +26,8 @@ class DynamicRule(Rule):
             conditions=self._conditions,
             actions=self._actions,
             rule_type=rule_db.rule_type,
-            condition_logic=rule_db.condition_logic
+            condition_logic=rule_db.condition_logic,
+            priority=rule_db.priority
         )
 
     def check_conditions(self, working_memory) -> bool:

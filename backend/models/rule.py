@@ -19,7 +19,8 @@ class Rule(ABC):
         actions: List[str],
         rule_type: str = "#i",
         flag: str = "#fire",
-        condition_logic: str = "AND"
+        condition_logic: str = "AND",
+        priority: int = 0
     ):
         """
         ルールの初期化
@@ -31,6 +32,7 @@ class Rule(ABC):
             rule_type: ルールのタイプ（#i: 開始ルール、#m: 問結ルール、#n!: 終了ルール）
             flag: ルールの発火状態を示す
             condition_logic: 条件のロジック（"AND" または "OR"）
+            priority: 優先度（小さいほど優先）
         """
         self.name = name
         self.conditions = conditions
@@ -38,6 +40,7 @@ class Rule(ABC):
         self.type = rule_type
         self.flag = flag
         self.condition_logic = condition_logic
+        self.priority = priority
 
     @abstractmethod
     def check_conditions(self, working_memory) -> bool:
