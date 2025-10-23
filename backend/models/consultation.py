@@ -11,12 +11,13 @@ class Consultation:
     診断を制御するクラス
     """
 
-    def __init__(self, rules: List):
+    def __init__(self, rules: List, visa_type: str = "E"):
         """
         Consultation の初期化
 
         Args:
             rules: ルールのリスト
+            visa_type: ビザタイプ（E, L, B など）
         """
         from .working_memory import WorkingMemory
 
@@ -27,6 +28,7 @@ class Consultation:
         self.pending_rules: List = []  # 評価待ちのルール（質問中）
         self.evaluating_rules: set = set()  # 推論が開始されたルール名のセット（fireするまで保持）
         self.history_stack: List[Dict[str, Any]] = []  # 各ステップのスナップショット
+        self.visa_type: str = visa_type  # ビザタイプ
 
         # ルールをコレクションに追加
         for rule in rules:
@@ -447,6 +449,7 @@ class Consultation:
         次に必要な質問を見つける
         他のルールから導出できる仮説は質問せず、基本的な事実のみを質問する
         OR条件で他の条件が既に満たされている場合も質問しない
+        質問の優先度順にソートして返す
 
         Returns:
             次に尋ねるべき質問、なければ None
@@ -455,6 +458,9 @@ class Consultation:
         derivable_hypotheses = set()
         for rule in self.collection_of_rules.values():
             derivable_hypotheses.update(rule.actions)
+
+        # 候補となる質問を全て収集
+        candidate_questions = []
 
         # すべてのルールの条件をチェック
         for rule_name, rule in self.collection_of_rules.items():
@@ -470,9 +476,48 @@ class Consultation:
                     if condition not in derivable_hypotheses:
                         # OR条件で他の条件が既に満たされている場合も質問しない
                         if self._is_question_necessary(condition):
-                            return condition
+                            if condition not in candidate_questions:
+                                candidate_questions.append(condition)
 
-        return None
+        if not candidate_questions:
+            return None
+
+        # 質問を優先度順にソート
+        sorted_questions = self._sort_questions_by_priority(candidate_questions)
+        return sorted_questions[0]
+
+    def _sort_questions_by_priority(self, questions: List[str]) -> List[str]:
+        """
+        質問を優先度順にソート
+
+        Args:
+            questions: ソートする質問のリスト
+
+        Returns:
+            優先度順にソートされた質問のリスト
+        """
+        # データベースから質問の優先度を取得
+        try:
+            from backend.models.question_priority_db import SessionLocal, QuestionPriority
+
+            db = SessionLocal()
+            try:
+                priorities = db.query(QuestionPriority).filter(
+                    QuestionPriority.visa_type == self.visa_type
+                ).all()
+
+                question_priority = {p.question: p.priority for p in priorities}
+            finally:
+                db.close()
+        except Exception as e:
+            print(f"質問優先度の取得に失敗: {e}")
+            question_priority = {}
+
+        # 優先度でソート（優先度が設定されていない質問は後ろに）
+        def get_priority(question):
+            return question_priority.get(question, 999)
+
+        return sorted(questions, key=get_priority)
 
     def reset(self) -> None:
         """

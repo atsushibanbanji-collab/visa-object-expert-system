@@ -59,8 +59,8 @@ def start_consultation(request: StartRequest):
     else:
         rules = get_rules_by_visa_type(request.visa_type)
 
-    # 新しい診断セッションを作成
-    consultation_session = Consultation(rules)
+    # 新しい診断セッションを作成（visa_typeも渡す）
+    consultation_session = Consultation(rules, visa_type=request.visa_type)
 
     # 推論を開始
     result = consultation_session.start_up()

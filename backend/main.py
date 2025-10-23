@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.api.consultation_api import router as consultation_router
 from backend.api.rule_management_api import router as rule_management_router
 from backend.api.validation_api import router as validation_router
+from backend.api.question_priority_api import router as question_priority_router
 from backend.database import init_db
 import os
 
@@ -43,6 +44,7 @@ print(f"✅ Rules cache initialized: E={len(RULES_CACHE['E'])} rules, L={len(RUL
 app.include_router(consultation_router)
 app.include_router(rule_management_router)
 app.include_router(validation_router)
+app.include_router(question_priority_router)
 
 @app.get("/")
 def read_root():
