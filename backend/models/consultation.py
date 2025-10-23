@@ -556,8 +556,15 @@ class Consultation:
                 rule = self.collection_of_rules[rule_name]
                 chain_rules.append(rule)
 
-        # 優先度順にソート
-        chain_rules.sort(key=lambda r: r.priority)
+        # ルール名の数値順にソート（"1", "2", "3", ...）
+        def get_rule_number(rule):
+            try:
+                return int(rule.name)
+            except ValueError:
+                # 数値でない場合は大きい値を返して後ろに配置
+                return 999999
+
+        chain_rules.sort(key=get_rule_number)
 
         # ルール情報を構築
         chain = []
