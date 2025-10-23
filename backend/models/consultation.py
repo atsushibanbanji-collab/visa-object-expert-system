@@ -78,6 +78,21 @@ class Consultation:
             for rule in self.pending_rules:
                 self.evaluating_rules.add(rule.name)
 
+            # pending_rulesのルールのアクション（結論）を条件として必要とするルールも追加
+            # 例: ルール3のアクション"会社がEビザの条件を満たします"を条件として使うルール2も表示
+            # 再帰的に依存ルールを追加（ルール3 → ルール2 → ルール1）
+            def add_dependent_rules_recursively(actions_to_check):
+                for action in actions_to_check:
+                    dependent_rules = self._get_rules_that_need_hypothesis(action)
+                    for dep_rule in dependent_rules:
+                        if not dep_rule.is_fired() and dep_rule.name not in self.evaluating_rules:
+                            self.evaluating_rules.add(dep_rule.name)
+                            # さらにこのルールのアクションの依存ルールも追加
+                            add_dependent_rules_recursively(dep_rule.actions)
+
+            for rule in self.pending_rules:
+                add_dependent_rules_recursively(rule.actions)
+
             # デバッグ情報
             pending_rule_names = [r.name for r in self.pending_rules]
             print(f"DEBUG: next_question='{next_question}'")
