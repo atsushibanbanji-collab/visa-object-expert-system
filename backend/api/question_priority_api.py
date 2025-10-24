@@ -73,6 +73,116 @@ def get_question_priorities(visa_type: str, db: Session = Depends(get_db)):
     return [p.to_dict() for p in priorities]
 
 
+@router.get("/debug")
+def debug_question_priorities(visa_type: str = "E"):
+    """
+    質問優先度のデバッグ情報を取得
+
+    Args:
+        visa_type: ビザタイプ（E, L, B など）
+
+    Returns:
+        デバッグ情報
+    """
+    from backend.rules.visa_rules import get_rules_by_visa_type
+
+    # ルールを取得
+    rules = get_rules_by_visa_type(visa_type)
+
+    # すべてのルールのアクション（導出可能な仮説）を収集
+    derivable_hypotheses = set()
+    hypothesis_to_rules = {}
+
+    for rule in rules:
+        for action in rule.actions:
+            derivable_hypotheses.add(action)
+            if action not in hypothesis_to_rules:
+                hypothesis_to_rules[action] = []
+            hypothesis_to_rules[action].append(rule.name)
+
+    # ファイナルルール（#n!）を特定
+    final_rules = [rule for rule in rules if rule.type == "#n!"]
+
+    # 各ルールを導出するために必要な全質問を再帰的に収集する関数
+    def collect_required_questions(rule, visited_rules=None):
+        if visited_rules is None:
+            visited_rules = set()
+
+        if rule.name in visited_rules:
+            return set()
+
+        visited_rules.add(rule.name)
+        questions = set()
+
+        for condition in rule.conditions:
+            if condition in derivable_hypotheses:
+                if condition in hypothesis_to_rules:
+                    for sub_rule_name in hypothesis_to_rules[condition]:
+                        sub_rule = next((r for r in rules if r.name == sub_rule_name), None)
+                        if sub_rule:
+                            questions.update(collect_required_questions(sub_rule, visited_rules.copy()))
+            else:
+                questions.add(condition)
+
+        return questions
+
+    # 各質問について、関連するファイナルルール数と最小質問数を記録
+    question_stats = {}
+    final_rule_details = []
+
+    for final_rule in final_rules:
+        required_questions = collect_required_questions(final_rule)
+        question_count = len(required_questions)
+
+        final_rule_details.append({
+            "rule_name": final_rule.name,
+            "question_count": question_count,
+            "questions": list(required_questions)
+        })
+
+        for question in required_questions:
+            if question not in question_stats:
+                question_stats[question] = {
+                    "rule_count": 0,
+                    "min_questions": question_count,
+                    "related_rules": []
+                }
+
+            question_stats[question]["rule_count"] += 1
+            question_stats[question]["related_rules"].append(final_rule.name)
+            question_stats[question]["min_questions"] = min(
+                question_stats[question]["min_questions"],
+                question_count
+            )
+
+    # 優先度順にソート
+    sorted_questions = sorted(
+        question_stats.keys(),
+        key=lambda q: (-question_stats[q]["rule_count"], question_stats[q]["min_questions"], q)
+    )
+
+    # トップ10
+    top_10 = []
+    for i, q in enumerate(sorted_questions[:10]):
+        stats = question_stats[q]
+        top_10.append({
+            "priority": i,
+            "question": q,
+            "rule_count": stats["rule_count"],
+            "min_questions": stats["min_questions"],
+            "related_rules": stats["related_rules"]
+        })
+
+    return {
+        "visa_type": visa_type,
+        "total_rules": len(rules),
+        "final_rules_count": len(final_rules),
+        "total_questions": len(question_stats),
+        "final_rule_details": final_rule_details,
+        "top_10_questions": top_10
+    }
+
+
 @router.put("/{question_id}")
 def update_question_priority(
     question_id: int,
