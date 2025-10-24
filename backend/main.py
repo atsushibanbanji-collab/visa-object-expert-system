@@ -5,6 +5,7 @@ from backend.api.rule_management_api import router as rule_management_router
 from backend.api.validation_api import router as validation_router
 from backend.api.question_priority_api import router as question_priority_router
 from backend.database import init_db
+from backend.models.question_priority_db import QuestionPriority  # テーブル作成のためインポート
 import os
 
 # データベースからルールを読み込むか、ハードコードされたルールを使うか

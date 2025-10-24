@@ -507,17 +507,43 @@ class Consultation:
                 ).all()
 
                 question_priority = {p.question: p.priority for p in priorities}
+
+                # デバッグ: 優先度情報をログ出力
+                print(f"[DEBUG] 質問優先度データ取得: {len(question_priority)}件")
+                if question_priority:
+                    # 優先度が低い（優先的に表示される）質問トップ5を表示
+                    sorted_priorities = sorted(question_priority.items(), key=lambda x: x[1])[:5]
+                    print(f"[DEBUG] 優先度トップ5:")
+                    for q, p in sorted_priorities:
+                        print(f"  優先度{p}: {q}")
             finally:
                 db.close()
         except Exception as e:
-            print(f"質問優先度の取得に失敗: {e}")
+            print(f"[ERROR] 質問優先度の取得に失敗: {e}")
+            import traceback
+            traceback.print_exc()
             question_priority = {}
+
+        # 候補質問のデバッグ情報
+        print(f"[DEBUG] 候補質問数: {len(questions)}")
+        if questions:
+            print(f"[DEBUG] 候補質問:")
+            for q in questions[:5]:  # 最初の5件だけ表示
+                priority = question_priority.get(q, 999)
+                print(f"  優先度{priority}: {q}")
 
         # 優先度でソート（優先度が設定されていない質問は後ろに）
         def get_priority(question):
             return question_priority.get(question, 999)
 
-        return sorted(questions, key=get_priority)
+        sorted_questions = sorted(questions, key=get_priority)
+
+        # ソート後の最初の質問を表示
+        if sorted_questions:
+            selected_priority = question_priority.get(sorted_questions[0], 999)
+            print(f"[DEBUG] 選択された質問: 優先度{selected_priority}: {sorted_questions[0]}")
+
+        return sorted_questions
 
     def reset(self) -> None:
         """

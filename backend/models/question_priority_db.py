@@ -1,12 +1,8 @@
 """
 質問の優先度を管理するデータベースモデル
 """
-from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os
-
-Base = declarative_base()
+from sqlalchemy import Column, Integer, String
+from backend.database import Base, SessionLocal, get_db as database_get_db
 
 
 class QuestionPriority(Base):
@@ -30,24 +26,12 @@ class QuestionPriority(Base):
         }
 
 
-# データベース接続の設定
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./visa_expert.db')
-if DATABASE_URL.startswith('postgres://'):
-    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
 def init_db():
     """データベースを初期化"""
-    Base.metadata.create_all(bind=engine)
+    from backend.database import init_db as database_init_db
+    database_init_db()
 
 
 def get_db():
     """データベースセッションを取得"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    return database_get_db()

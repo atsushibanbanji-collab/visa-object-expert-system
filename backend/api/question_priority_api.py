@@ -5,12 +5,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from backend.models.question_priority_db import QuestionPriority, get_db, init_db
+from backend.models.question_priority_db import QuestionPriority, get_db
 
 router = APIRouter(prefix="/api/question-priorities", tags=["question-priorities"])
-
-# 起動時にテーブルを作成
-init_db()
 
 
 class QuestionPriorityUpdate(BaseModel):
