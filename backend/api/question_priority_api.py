@@ -77,8 +77,13 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
     """
     質問優先度を初期化（全ての質問をデータベースに登録）
 
-    優先度は、ファイナルルール（#n!）を導出するために必要な質問数が
-    少ない順に設定されます。
+    優先度は以下の基準で決定されます:
+    1. より多くのファイナルルール（診断結果）に関連する質問を優先
+    2. 同じ関連数の場合、最小質問数が少ない方を優先
+    3. それも同じ場合はアルファベット順
+
+    この方式により、国籍のような多くの診断結果に共通する基本的な質問が
+    優先的に表示されます。
 
     Args:
         visa_type: ビザタイプ（E, L, B など）
@@ -152,8 +157,8 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
 
             return questions
 
-        # 各質問について、それが関連する最小の質問数を記録
-        question_min_count = {}
+        # 各質問について、関連するファイナルルール数と最小質問数を記録
+        question_stats = {}  # {質問: {"rule_count": X, "min_questions": Y}}
 
         for final_rule in final_rules:
             required_questions = collect_required_questions(final_rule)
@@ -161,19 +166,37 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
             print(f"[DEBUG] {final_rule.name}: {question_count}個の質問が必要")
 
             for question in required_questions:
-                if question not in question_min_count:
-                    question_min_count[question] = question_count
-                else:
-                    # より少ない質問数で到達できるルートがあれば更新
-                    question_min_count[question] = min(question_min_count[question], question_count)
+                if question not in question_stats:
+                    question_stats[question] = {
+                        "rule_count": 0,
+                        "min_questions": question_count
+                    }
 
-        print(f"[DEBUG] 全質問数: {len(question_min_count)}")
+                # この質問が関連するファイナルルール数をカウント
+                question_stats[question]["rule_count"] += 1
 
-        # 質問数が少ない順にソート（同じ質問数の場合はアルファベット順）
+                # より少ない質問数で到達できるルートがあれば更新
+                question_stats[question]["min_questions"] = min(
+                    question_stats[question]["min_questions"],
+                    question_count
+                )
+
+        print(f"[DEBUG] 全質問数: {len(question_stats)}")
+
+        # 優先度の計算ロジック:
+        # 1. より多くのファイナルルールに関連する質問を優先（rule_countが大きい順）
+        # 2. 同じrule_countの場合、最小質問数が少ない方を優先
+        # 3. それも同じ場合はアルファベット順
         sorted_questions = sorted(
-            question_min_count.keys(),
-            key=lambda q: (question_min_count[q], q)
+            question_stats.keys(),
+            key=lambda q: (-question_stats[q]["rule_count"], question_stats[q]["min_questions"], q)
         )
+
+        # デバッグ: トップ10の質問を表示
+        print("[DEBUG] 優先度トップ10:")
+        for i, q in enumerate(sorted_questions[:10]):
+            stats = question_stats[q]
+            print(f"  {i}: {q} (ルール数:{stats['rule_count']}, 最小質問数:{stats['min_questions']})")
 
         # データベースに保存
         added_count = 0
