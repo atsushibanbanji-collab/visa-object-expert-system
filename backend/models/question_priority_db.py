@@ -2,7 +2,7 @@
 質問の優先度を管理するデータベースモデル
 """
 from sqlalchemy import Column, Integer, String
-from backend.database import Base, SessionLocal, get_db as database_get_db
+from backend.database import Base, SessionLocal
 
 
 class QuestionPriority(Base):
@@ -33,5 +33,9 @@ def init_db():
 
 
 def get_db():
-    """データベースセッションを取得"""
-    return database_get_db()
+    """データベースセッションを取得（ジェネレータ）"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
