@@ -80,6 +80,9 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
     """
     質問優先度を初期化（全ての質問をデータベースに登録）
 
+    優先度は、ファイナルルール（#n!）を導出するために必要な質問数が
+    少ない順に設定されます。
+
     Args:
         visa_type: ビザタイプ（E, L, B など）
         db: データベースセッション
@@ -101,21 +104,83 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
 
     # すべてのルールのアクション（導出可能な仮説）を収集
     derivable_hypotheses = set()
-    for rule in rules:
-        derivable_hypotheses.update(rule.actions)
+    hypothesis_to_rules = {}  # 仮説 -> その仮説を導出するルールのマッピング
 
-    # すべてのルールの条件から質問を抽出
-    questions = set()
     for rule in rules:
+        for action in rule.actions:
+            derivable_hypotheses.add(action)
+            if action not in hypothesis_to_rules:
+                hypothesis_to_rules[action] = []
+            hypothesis_to_rules[action].append(rule)
+
+    # ファイナルルール（#n!）を特定
+    final_rules = [rule for rule in rules if rule.type == "#n!"]
+
+    # 各ルールを導出するために必要な全質問を再帰的に収集する関数
+    def collect_required_questions(rule, visited_rules=None):
+        """
+        あるルールを導出するために必要な全質問を再帰的に収集
+
+        Args:
+            rule: 対象のルール
+            visited_rules: 循環参照を避けるために訪問済みルールを記録
+
+        Returns:
+            必要な質問のセット
+        """
+        if visited_rules is None:
+            visited_rules = set()
+
+        # 循環参照を避ける
+        if rule.name in visited_rules:
+            return set()
+
+        visited_rules.add(rule.name)
+        questions = set()
+
         for condition in rule.conditions:
-            # 他のルールから導出できる仮説は質問ではない
-            if condition not in derivable_hypotheses:
+            if condition in derivable_hypotheses:
+                # この条件は他のルールから導出される仮説
+                # そのルールの質問も再帰的に収集
+                if condition in hypothesis_to_rules:
+                    for sub_rule in hypothesis_to_rules[condition]:
+                        questions.update(collect_required_questions(sub_rule, visited_rules.copy()))
+            else:
+                # この条件はユーザーに質問する必要がある
                 questions.add(condition)
 
-    # 質問を優先度順に並べる（デフォルトは出現順）
+        return questions
+
+    # 各質問について、それが関連する最小の質問数を記録
+    question_min_count = {}
+
+    for final_rule in final_rules:
+        required_questions = collect_required_questions(final_rule)
+        question_count = len(required_questions)
+
+        for question in required_questions:
+            if question not in question_min_count:
+                question_min_count[question] = question_count
+            else:
+                # より少ない質問数で到達できるルートがあれば更新
+                question_min_count[question] = min(question_min_count[question], question_count)
+
+    # 質問数が少ない順にソート（同じ質問数の場合はアルファベット順）
+    sorted_questions = sorted(
+        question_min_count.keys(),
+        key=lambda q: (question_min_count[q], q)
+    )
+
+    # データベースに保存
     added_count = 0
-    for index, question in enumerate(sorted(questions)):
-        if question not in existing_questions:
+    updated_count = 0
+
+    for index, question in enumerate(sorted_questions):
+        if question in existing_questions:
+            # 既存の質問の優先度を更新
+            existing_questions[question].priority = index
+            updated_count += 1
+        else:
             # 新しい質問を追加
             new_priority = QuestionPriority(
                 visa_type=visa_type,
@@ -127,4 +192,8 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
 
     db.commit()
 
-    return {"added": added_count, "total": len(questions)}
+    return {
+        "added": added_count,
+        "updated": updated_count,
+        "total": len(sorted_questions)
+    }

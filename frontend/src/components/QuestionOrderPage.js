@@ -31,14 +31,27 @@ const QuestionOrderPage = () => {
 
   // 質問を初期化
   const initializeQuestions = async () => {
-    if (!window.confirm('質問の優先度を初期化しますか？（既存のデータは保持されます）')) {
+    if (!window.confirm('質問の優先度を初期化しますか？\n（ファイナルルールに必要な質問数が少ない順に並べ替えられます）')) {
       return;
     }
 
     try {
       setInitializing(true);
       const response = await axios.post(`/api/question-priorities/initialize?visa_type=${visaTypeFilter}`);
-      alert(`${response.data.added}個の質問を追加しました（合計: ${response.data.total}個）`);
+      const { added, updated, total } = response.data;
+
+      let message = '';
+      if (added > 0 && updated > 0) {
+        message = `${added}個の質問を追加、${updated}個の質問を更新しました（合計: ${total}個）`;
+      } else if (added > 0) {
+        message = `${added}個の質問を追加しました（合計: ${total}個）`;
+      } else if (updated > 0) {
+        message = `${updated}個の質問を更新しました（合計: ${total}個）`;
+      } else {
+        message = `質問はすでに最新です（合計: ${total}個）`;
+      }
+
+      alert(message);
       fetchQuestions();
     } catch (error) {
       console.error('質問の初期化に失敗しました:', error);
@@ -266,6 +279,7 @@ const QuestionOrderPage = () => {
           <li>順序が小さいほど優先的に質問されます</li>
           <li>変更後は「順序を保存」ボタンで保存してください</li>
           <li>初回は「質問を初期化」ボタンでルールから質問を抽出してください</li>
+          <li>初期化時は、ファイナルルールに到達するために必要な質問数が少ない順に自動で並べ替えられます</li>
         </ul>
       </div>
     </div>
