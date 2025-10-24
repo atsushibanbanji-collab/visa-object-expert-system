@@ -55,7 +55,8 @@ const QuestionOrderPage = () => {
       fetchQuestions();
     } catch (error) {
       console.error('質問の初期化に失敗しました:', error);
-      alert('質問の初期化に失敗しました');
+      const errorMessage = error.response?.data?.detail || error.message || '不明なエラー';
+      alert(`質問の初期化に失敗しました:\n${errorMessage}`);
     } finally {
       setInitializing(false);
     }
