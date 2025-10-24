@@ -1,7 +1,7 @@
 """
 質問の優先度を管理するデータベースモデル
 """
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, UniqueConstraint
 from backend.database import Base, SessionLocal
 
 
@@ -10,10 +10,13 @@ class QuestionPriority(Base):
     質問の優先度を管理するモデル
     """
     __tablename__ = 'question_priorities'
+    __table_args__ = (
+        UniqueConstraint('visa_type', 'question', name='uix_visa_question'),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     visa_type = Column(String, nullable=False)  # E, L, B など
-    question = Column(String, nullable=False, unique=True)  # 質問文
+    question = Column(String, nullable=False)  # 質問文
     priority = Column(Integer, nullable=False, default=999)  # 優先度（小さいほど先）
 
     def to_dict(self):

@@ -10,6 +10,7 @@ const QuestionOrderPage = () => {
   const [draggedItem, setDraggedItem] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [initializing, setInitializing] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   // 質問一覧を取得
   const fetchQuestions = async () => {
@@ -26,6 +27,26 @@ const QuestionOrderPage = () => {
       alert('質問の取得に失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // データベーステーブルをリセット
+  const resetTable = async () => {
+    if (!window.confirm('警告: すべてのビザタイプの質問優先度データが削除されます。\nデータベーステーブルをリセットしますか？')) {
+      return;
+    }
+
+    try {
+      setResetting(true);
+      await axios.post('/api/question-priorities/reset-table');
+      alert('テーブルをリセットしました。\n次に「質問を初期化」ボタンをクリックしてください。');
+      fetchQuestions();
+    } catch (error) {
+      console.error('テーブルのリセットに失敗しました:', error);
+      const errorMessage = error.response?.data?.detail || error.message || '不明なエラー';
+      alert(`テーブルのリセットに失敗しました:\n${errorMessage}`);
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -181,6 +202,14 @@ const QuestionOrderPage = () => {
             <option value="H">H-1Bビザ</option>
             <option value="J">J-1ビザ</option>
           </select>
+          <button
+            onClick={resetTable}
+            disabled={resetting}
+            className="btn btn-secondary"
+            style={{ background: '#dc3545' }}
+          >
+            {resetting ? 'リセット中...' : 'DBリセット'}
+          </button>
           <button
             onClick={initializeQuestions}
             disabled={initializing}

@@ -527,8 +527,8 @@ class Consultation:
         # 候補質問のデバッグ情報
         print(f"[DEBUG] 候補質問数: {len(questions)}")
         if questions:
-            print(f"[DEBUG] 候補質問:")
-            for q in questions[:5]:  # 最初の5件だけ表示
+            print(f"[DEBUG] 候補質問（優先度付き）:")
+            for q in questions:  # 全候補質問を表示
                 priority = question_priority.get(q, 999)
                 print(f"  優先度{priority}: {q}")
 

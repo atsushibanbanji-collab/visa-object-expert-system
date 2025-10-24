@@ -10,6 +10,36 @@ from backend.models.question_priority_db import QuestionPriority, get_db
 router = APIRouter(prefix="/api/question-priorities", tags=["question-priorities"])
 
 
+@router.post("/reset-table")
+def reset_question_priorities_table():
+    """
+    質問優先度テーブルを削除して再作成する
+
+    注意: すべての質問優先度データが削除されます
+
+    Returns:
+        リセット完了メッセージ
+    """
+    try:
+        from backend.models.question_priority_db import QuestionPriority
+        from backend.database import engine
+
+        # テーブルを削除
+        QuestionPriority.__table__.drop(engine, checkfirst=True)
+        print("[DEBUG] question_priorities テーブルを削除しました")
+
+        # テーブルを再作成
+        QuestionPriority.__table__.create(engine, checkfirst=True)
+        print("[DEBUG] question_priorities テーブルを再作成しました")
+
+        return {"message": "質問優先度テーブルをリセットしました"}
+    except Exception as e:
+        print(f"[ERROR] テーブルのリセットに失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"テーブルのリセットに失敗しました: {str(e)}")
+
+
 class QuestionPriorityUpdate(BaseModel):
     """質問優先度更新リクエスト"""
     id: int
