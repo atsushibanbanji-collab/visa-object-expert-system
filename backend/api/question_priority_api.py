@@ -155,10 +155,33 @@ def debug_question_priorities(visa_type: str = "E"):
                 question_count
             )
 
+    # 基本的な質問のキーワードリスト（優先度を上げる）
+    priority_keywords = [
+        "国籍",
+        "申請者と会社の国籍",
+        "学歴",
+        "学部卒",
+        "大学院卒",
+        "業務経験",
+    ]
+
+    # 質問の基本度スコアを計算
+    def get_priority_score(question):
+        score = 0
+        for keyword in priority_keywords:
+            if keyword in question:
+                score += 10
+        return score
+
     # 優先度順にソート
     sorted_questions = sorted(
         question_stats.keys(),
-        key=lambda q: (-question_stats[q]["rule_count"], question_stats[q]["min_questions"], q)
+        key=lambda q: (
+            -get_priority_score(q),
+            -question_stats[q]["rule_count"],
+            question_stats[q]["min_questions"],
+            q
+        )
     )
 
     # トップ10
@@ -168,6 +191,7 @@ def debug_question_priorities(visa_type: str = "E"):
         top_10.append({
             "priority": i,
             "question": q,
+            "priority_score": get_priority_score(q),
             "rule_count": stats["rule_count"],
             "min_questions": stats["min_questions"],
             "related_rules": stats["related_rules"]
@@ -218,12 +242,13 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
     質問優先度を初期化（全ての質問をデータベースに登録）
 
     優先度は以下の基準で決定されます:
-    1. より多くのファイナルルール（診断結果）に関連する質問を優先
-    2. 同じ関連数の場合、最小質問数が少ない方を優先
-    3. それも同じ場合はアルファベット順
+    1. 基本質問キーワード（国籍、学歴、業務経験など）を含む質問を最優先
+    2. より多くのファイナルルール（診断結果）に関連する質問を優先
+    3. 同じ関連数の場合、最小質問数が少ない方を優先
+    4. それも同じ場合はアルファベット順
 
-    この方式により、国籍のような多くの診断結果に共通する基本的な質問が
-    優先的に表示されます。
+    キーワードマッチにより、ファイナルルールが1つしかない場合でも
+    基本的な質問が優先的に表示されます。
 
     Args:
         visa_type: ビザタイプ（E, L, B など）
@@ -323,13 +348,37 @@ def initialize_question_priorities(visa_type: str, db: Session = Depends(get_db)
 
         print(f"[DEBUG] 全質問数: {len(question_stats)}")
 
+        # 基本的な質問のキーワードリスト（優先度を上げる）
+        priority_keywords = [
+            "国籍",
+            "申請者と会社の国籍",
+            "学歴",
+            "学部卒",
+            "大学院卒",
+            "業務経験",
+        ]
+
+        # 質問の基本度スコアを計算（キーワードにマッチするほど高い）
+        def get_priority_score(question):
+            score = 0
+            for keyword in priority_keywords:
+                if keyword in question:
+                    score += 10  # キーワードマッチでボーナス
+            return score
+
         # 優先度の計算ロジック:
-        # 1. より多くのファイナルルールに関連する質問を優先（rule_countが大きい順）
-        # 2. 同じrule_countの場合、最小質問数が少ない方を優先
-        # 3. それも同じ場合はアルファベット順
+        # 1. 基本質問キーワードにマッチする質問を最優先（priority_scoreが高い順）
+        # 2. より多くのファイナルルールに関連する質問を優先（rule_countが大きい順）
+        # 3. 同じrule_countの場合、最小質問数が少ない方を優先
+        # 4. それも同じ場合はアルファベット順
         sorted_questions = sorted(
             question_stats.keys(),
-            key=lambda q: (-question_stats[q]["rule_count"], question_stats[q]["min_questions"], q)
+            key=lambda q: (
+                -get_priority_score(q),  # 基本質問を最優先
+                -question_stats[q]["rule_count"],
+                question_stats[q]["min_questions"],
+                q
+            )
         )
 
         # デバッグ: トップ10の質問を表示
