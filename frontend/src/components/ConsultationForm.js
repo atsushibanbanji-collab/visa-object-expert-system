@@ -14,6 +14,8 @@ const ConsultationForm = () => {
   const [appliedRules, setAppliedRules] = useState([]);  // 適用されたルールの履歴（結果画面用）
   const [debugInfo, setDebugInfo] = useState({ findings: {}, hypotheses: {}, conflict_set: [], applied_rules: [] });  // デバッグ用の推論状態
   const [reasoningChain, setReasoningChain] = useState([]);  // 現在の推論チェーン
+  const [availableQuestions, setAvailableQuestions] = useState([]);  // 回答可能な代替質問
+  const [showQuestionSelector, setShowQuestionSelector] = useState(false);  // 質問選択UIの表示状態
 
   // 推論状態を取得する関数
   const fetchDebugInfo = async () => {
@@ -37,10 +39,12 @@ const ConsultationForm = () => {
       setImpossible(false);
       setResults({});
       setQuestionHistory([]);
+      setShowQuestionSelector(false);
 
       if (response.data.status === 'need_input') {
         setCurrentQuestion(response.data.question);
         setReasoningChain(response.data.reasoning_chain || []);
+        setAvailableQuestions(response.data.available_questions || []);
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
         setAppliedRules(response.data.applied_rules || []);
@@ -79,6 +83,7 @@ const ConsultationForm = () => {
       if (response.data.status === 'need_input') {
         setCurrentQuestion(response.data.question);
         setReasoningChain(response.data.reasoning_chain || []);
+        setAvailableQuestions(response.data.available_questions || []);
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
         setAppliedRules(response.data.applied_rules || []);
@@ -115,9 +120,113 @@ const ConsultationForm = () => {
       setQuestionHistory([]);
       setAppliedRules([]);
       setDebugInfo({ findings: {}, hypotheses: {}, conflict_set: [], applied_rules: [] });
+      setAvailableQuestions([]);
+      setShowQuestionSelector(false);
     } catch (error) {
       console.error('リセットに失敗しました:', error);
       alert('リセットに失敗しました。もう一度お試しください。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSkipQuestion = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post('/api/consultation/skip-question', {
+        question: currentQuestion
+      });
+
+      // 次の質問または状態を処理
+      if (response.data.status === 'need_input') {
+        setCurrentQuestion(response.data.question);
+        setReasoningChain(response.data.reasoning_chain || []);
+        setAvailableQuestions(response.data.available_questions || []);
+        setShowQuestionSelector(false);
+      } else if (response.data.status === 'completed') {
+        setResults(response.data.results);
+        setAppliedRules(response.data.applied_rules || []);
+        setCompleted(true);
+        setCurrentQuestion('');
+        setReasoningChain([]);
+        setShowQuestionSelector(false);
+      }
+
+      // 推論状態を取得（デバッグ用）
+      await fetchDebugInfo();
+    } catch (error) {
+      console.error('質問のスキップに失敗しました:', error);
+      alert('質問のスキップに失敗しました。もう一度お試しください。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectQuestion = async (selectedQuestion) => {
+    if (selectedQuestion === currentQuestion) {
+      // 同じ質問を選択した場合は質問選択UIを閉じる
+      setShowQuestionSelector(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 現在の質問をスキップして、選択した質問に切り替える
+      const skipResponse = await axios.post('/api/consultation/skip-question', {
+        question: currentQuestion
+      });
+
+      // スキップ後に選択した質問が表示されているか確認
+      if (skipResponse.data.question === selectedQuestion) {
+        // 既に選択した質問が表示されている
+        setCurrentQuestion(skipResponse.data.question);
+        setReasoningChain(skipResponse.data.reasoning_chain || []);
+        setAvailableQuestions(skipResponse.data.available_questions || []);
+        setShowQuestionSelector(false);
+      } else {
+        // 選択した質問が出るまでスキップを繰り返す
+        let currentQ = skipResponse.data.question;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (currentQ !== selectedQuestion && attempts < maxAttempts) {
+          const nextSkip = await axios.post('/api/consultation/skip-question', {
+            question: currentQ
+          });
+
+          if (nextSkip.data.status === 'need_input') {
+            currentQ = nextSkip.data.question;
+            if (currentQ === selectedQuestion) {
+              setCurrentQuestion(nextSkip.data.question);
+              setReasoningChain(nextSkip.data.reasoning_chain || []);
+              setAvailableQuestions(nextSkip.data.available_questions || []);
+              setShowQuestionSelector(false);
+              break;
+            }
+          } else {
+            // 完了した場合
+            setResults(nextSkip.data.results);
+            setAppliedRules(nextSkip.data.applied_rules || []);
+            setCompleted(true);
+            setCurrentQuestion('');
+            setReasoningChain([]);
+            setShowQuestionSelector(false);
+            break;
+          }
+          attempts++;
+        }
+
+        if (attempts >= maxAttempts) {
+          alert('選択した質問に到達できませんでした。');
+          setShowQuestionSelector(false);
+        }
+      }
+
+      // 推論状態を取得（デバッグ用）
+      await fetchDebugInfo();
+    } catch (error) {
+      console.error('質問の選択に失敗しました:', error);
+      alert('質問の選択に失敗しました。もう一度お試しください。');
     } finally {
       setLoading(false);
     }
@@ -135,6 +244,7 @@ const ConsultationForm = () => {
       if (response.data.status === 'need_input') {
         setCurrentQuestion(response.data.question);
         setReasoningChain(response.data.reasoning_chain || []);
+        setAvailableQuestions(response.data.available_questions || []);
         setCompleted(false);
         setImpossible(false);
       } else if (response.data.status === 'completed') {
@@ -381,6 +491,48 @@ const ConsultationForm = () => {
               いいえ
             </button>
           </div>
+
+          {/* 質問選択ボタン */}
+          {availableQuestions.length > 0 && (
+            <div className="question-selector-section">
+              <button
+                className="btn btn-question-selector"
+                onClick={() => setShowQuestionSelector(!showQuestionSelector)}
+                disabled={loading}
+              >
+                {showQuestionSelector ? '質問選択を閉じる' : '別の質問に答える'}
+              </button>
+
+              {/* 質問選択ドロップダウン */}
+              {showQuestionSelector && (
+                <div className="question-selector-dropdown">
+                  <p className="question-selector-hint">
+                    回答可能な他の質問（{availableQuestions.length}個）：
+                  </p>
+                  <ul className="available-questions-list">
+                    {availableQuestions.map((question, index) => (
+                      <li key={index} className="available-question-item">
+                        <button
+                          className="btn-question-option"
+                          onClick={() => handleSelectQuestion(question)}
+                          disabled={loading}
+                        >
+                          {question}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    className="btn btn-skip-current"
+                    onClick={handleSkipQuestion}
+                    disabled={loading}
+                  >
+                    現在の質問をスキップ
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 戻るボタン */}
           {questionHistory.length > 0 && (

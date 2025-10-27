@@ -103,12 +103,17 @@ class Consultation:
             print(f"DEBUG: reasoning_chain length={len(reasoning_chain)}")
             print(f"DEBUG: reasoning_chain rules={[r['rule_name'] for r in reasoning_chain]}")
 
+            # 利用可能な質問リストを取得（現在の質問を除く）
+            available_questions = self.get_available_questions()
+            alternative_questions = [q for q in available_questions if q != next_question][:5]
+
             return {
                 "status": "need_input",
                 "message": "次の質問に答えてください",
                 "question": next_question,
                 "need_input": True,
                 "reasoning_chain": reasoning_chain,
+                "available_questions": alternative_questions,  # 代替質問リスト
                 "debug_pending_rules": pending_rule_names  # デバッグ用
             }
 
@@ -451,10 +456,29 @@ class Consultation:
         Returns:
             次に尋ねるべき質問、なければ None
         """
+        available_questions = self.get_available_questions()
+        if available_questions:
+            return available_questions[0]
+        return None
+
+    def get_available_questions(self, limit: int = 10) -> List[str]:
+        """
+        現在回答可能な質問のリストを取得
+        他のルールから導出できる仮説は質問せず、基本的な事実のみを返す
+
+        Args:
+            limit: 返す質問の最大数
+
+        Returns:
+            回答可能な質問のリスト
+        """
         # すべてのルールのアクション（導出可能な仮説）を収集
         derivable_hypotheses = set()
         for rule in self.collection_of_rules.values():
             derivable_hypotheses.update(rule.actions)
+
+        available = []
+        seen_questions = set()
 
         # すべてのルールの条件をチェック
         for rule_name, rule in self.collection_of_rules.items():
@@ -466,13 +490,84 @@ class Consultation:
             for condition in rule.conditions:
                 # まだ回答されていない（WorkingMemoryにない）質問を探す
                 if not self.status.has_key(condition):
+                    # 重複チェック
+                    if condition in seen_questions:
+                        continue
+
                     # 他のルールから導出できる仮説は質問しない
                     if condition not in derivable_hypotheses:
                         # OR条件で他の条件が既に満たされている場合も質問しない
                         if self._is_question_necessary(condition):
-                            return condition
+                            available.append(condition)
+                            seen_questions.add(condition)
 
-        return None
+                            # 制限に達したら終了
+                            if len(available) >= limit:
+                                return available
+
+        return available
+
+    def skip_question(self, question_to_skip: str) -> Dict[str, Any]:
+        """
+        現在の質問をスキップして、次の質問に進む
+        スキップした質問は記録しておき、後で必要になったら再度尋ねる
+
+        Args:
+            question_to_skip: スキップする質問
+
+        Returns:
+            次の質問または推論結果
+        """
+        # スキップした質問を記録（将来の拡張用）
+        # 現在は単純に次の質問を探す
+
+        # 利用可能な質問リストを取得
+        available_questions = self.get_available_questions()
+
+        # スキップする質問を除外
+        remaining_questions = [q for q in available_questions if q != question_to_skip]
+
+        if remaining_questions:
+            # 次の質問がある場合
+            next_question = remaining_questions[0]
+
+            # pending_rulesを更新
+            self.pending_rules = self._get_rules_with_condition(next_question)
+
+            # evaluating_rulesを更新
+            for rule in self.pending_rules:
+                self.evaluating_rules.add(rule.name)
+
+            # 依存ルールも追加
+            def add_dependent_rules_recursively(actions_to_check):
+                for action in actions_to_check:
+                    dependent_rules = self._get_rules_that_need_hypothesis(action)
+                    for dep_rule in dependent_rules:
+                        if not dep_rule.is_fired() and dep_rule.name not in self.evaluating_rules:
+                            self.evaluating_rules.add(dep_rule.name)
+                            add_dependent_rules_recursively(dep_rule.actions)
+
+            for rule in self.pending_rules:
+                add_dependent_rules_recursively(rule.actions)
+
+            reasoning_chain = self._build_reasoning_chain(next_question)
+
+            return {
+                "status": "need_input",
+                "message": "次の質問に答えてください",
+                "question": next_question,
+                "need_input": True,
+                "reasoning_chain": reasoning_chain,
+                "available_questions": remaining_questions[:5]  # 最大5個の代替質問を提供
+            }
+        else:
+            # 質問がない場合は推論完了
+            return {
+                "status": "completed",
+                "message": "回答可能な質問がありません。推論を完了します。",
+                "results": dict(self.status.hypotheses),
+                "need_input": False
+            }
 
     def reset(self) -> None:
         """

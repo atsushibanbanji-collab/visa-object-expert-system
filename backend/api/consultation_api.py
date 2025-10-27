@@ -34,6 +34,7 @@ class ConsultationResponse(BaseModel):
     question: Optional[str] = None
     applied_rules: Optional[list] = None  # 適用されたルールの履歴
     reasoning_chain: Optional[list] = None  # 評価中のルールチェーン
+    available_questions: Optional[list] = None  # 回答可能な代替質問のリスト
     debug_pending_rules: Optional[list] = None  # デバッグ用
 
 
@@ -215,3 +216,51 @@ def get_all_questions():
         }
 
     return result
+
+
+@router.get("/available-questions")
+def get_available_questions():
+    """
+    現在回答可能な質問のリストを取得
+
+    Returns:
+        回答可能な質問のリスト
+    """
+    global consultation_session
+
+    if consultation_session is None:
+        raise HTTPException(status_code=400, detail="診断セッションが開始されていません")
+
+    available_questions = consultation_session.get_available_questions()
+
+    return {
+        "available_questions": available_questions,
+        "count": len(available_questions)
+    }
+
+
+class SkipQuestionRequest(BaseModel):
+    """質問スキップリクエスト"""
+    question: str
+
+
+@router.post("/skip-question", response_model=ConsultationResponse)
+def skip_question(request: SkipQuestionRequest):
+    """
+    現在の質問をスキップして次の質問に進む
+
+    Args:
+        request: スキップする質問
+
+    Returns:
+        次の質問または推論結果
+    """
+    global consultation_session
+
+    if consultation_session is None:
+        raise HTTPException(status_code=400, detail="診断セッションが開始されていません")
+
+    # 質問をスキップ
+    result = consultation_session.skip_question(request.question)
+
+    return ConsultationResponse(**result)
