@@ -11,12 +11,13 @@ class Consultation:
     診断を制御するクラス
     """
 
-    def __init__(self, rules: List):
+    def __init__(self, rules: List, flowchart_mode: bool = True):
         """
         Consultation の初期化
 
         Args:
             rules: ルールのリスト
+            flowchart_mode: フローチャートモード（条件を順番に検証）を使用するか
         """
         from .working_memory import WorkingMemory
 
@@ -28,9 +29,15 @@ class Consultation:
         self.evaluating_rules: set = set()  # 推論が開始されたルール名のセット（fireするまで保持）
         self.history_stack: List[Dict[str, Any]] = []  # 各ステップのスナップショット
 
+        # フローチャートモード用の状態
+        self.flowchart_mode: bool = flowchart_mode
+        self.current_rule_index: int = 0  # 現在評価中のルール番号
+        self.rules_list: List = []  # ルールをリストで保持（順序保証）
+
         # ルールをコレクションに追加
         for rule in rules:
             self.collection_of_rules[rule.name] = rule
+            self.rules_list.append(rule)
 
     def start_up(self) -> Dict[str, Any]:
         """
@@ -44,8 +51,130 @@ class Consultation:
         self.pending_rules = []
         self.evaluating_rules = set()
 
+        # フローチャートモードの状態を初期化
+        if self.flowchart_mode:
+            self.current_rule_index = 0
+
         # 推論を開始
-        return self.start_deduce()
+        if self.flowchart_mode:
+            return self.start_flowchart_deduce()
+        else:
+            return self.start_deduce()
+
+    def start_flowchart_deduce(self) -> Dict[str, Any]:
+        """
+        フローチャート形式の推論プロセス
+        ルールを1つずつ、条件1から順番に評価する
+
+        Returns:
+            推論結果
+        """
+        print(f"DEBUG: start_flowchart_deduce called, current_rule_index={self.current_rule_index}")
+
+        # すべてのルールを評価し終えた場合
+        if self.current_rule_index >= len(self.rules_list):
+            # まだ適用されたルールがない場合は申請不可
+            terminal_rules_applied = any(r for r in self.applied_rules if r.get('rule_type') == '#n!')
+            if not terminal_rules_applied:
+                return {
+                    "status": "completed",
+                    "message": "すべてのルールを評価しましたが、申請条件を満たしませんでした",
+                    "results": dict(self.status.hypotheses),
+                    "need_input": False
+                }
+
+            return {
+                "status": "completed",
+                "message": "推論が完了しました",
+                "results": dict(self.status.hypotheses),
+                "need_input": False
+            }
+
+        # 現在のルールを取得
+        current_rule = self.rules_list[self.current_rule_index]
+        print(f"DEBUG: evaluating rule {current_rule.name}")
+
+        # ルールが既に発火済みならスキップ
+        if current_rule.is_fired():
+            print(f"DEBUG: rule {current_rule.name} already fired, moving to next rule")
+            self.current_rule_index += 1
+            return self.start_flowchart_deduce()
+
+        # このルールを評価中としてマーク
+        self.evaluating_rules.add(current_rule.name)
+        self.pending_rules = [current_rule]
+
+        # ルールの各条件を順番にチェック
+        for condition_index, condition in enumerate(current_rule.conditions):
+            # 条件が仮説（他のルールの結論）かチェック
+            is_hypothesis = condition in self.status.hypotheses
+
+            # 既に回答済みまたは導出済みか確認
+            if self.status.has_key(condition):
+                value = self.status.get_value(condition)
+                print(f"DEBUG: condition '{condition}' already has value: {value}")
+
+                # AND条件で1つでもFalseがあればこのルールは不適用
+                if current_rule.condition_logic == "AND" and value is False:
+                    print(f"DEBUG: AND rule {current_rule.name} failed at condition '{condition}'")
+                    # このルールをスキップして次へ
+                    self.current_rule_index += 1
+                    return self.start_flowchart_deduce()
+
+                # OR条件で1つでもTrueがあればルールを適用可能かチェック
+                if current_rule.condition_logic == "OR" and value is True:
+                    # 他の条件もチェック（まだ未回答の条件があるか）
+                    all_conditions_checked = all(self.status.has_key(c) for c in current_rule.conditions)
+                    if all_conditions_checked:
+                        # すべての条件をチェック済みで、少なくとも1つTrue
+                        any_true = any(self.status.get_value(c) for c in current_rule.conditions)
+                        if any_true:
+                            print(f"DEBUG: OR rule {current_rule.name} satisfied, applying rule")
+                            return self.apply_rule(current_rule)
+
+                # 次の条件へ
+                continue
+            else:
+                # この条件について質問が必要
+                # 仮説（他のルールの結論）の場合は質問しない
+                derivable_hypotheses = set()
+                for rule in self.collection_of_rules.values():
+                    derivable_hypotheses.update(rule.actions)
+
+                if condition in derivable_hypotheses:
+                    # 仮説なので、先に他のルールを評価する必要がある
+                    # このルールを一旦保留して次のルールへ（後で戻ってくる）
+                    print(f"DEBUG: condition '{condition}' is a hypothesis, need to evaluate other rules first")
+                    self.current_rule_index += 1
+                    return self.start_flowchart_deduce()
+
+                # 質問が必要
+                print(f"DEBUG: asking question: '{condition}' (condition {condition_index + 1} of rule {current_rule.name})")
+
+                reasoning_chain = self._build_reasoning_chain(condition)
+
+                return {
+                    "status": "need_input",
+                    "message": f"ルール{current_rule.name}の条件{condition_index + 1}を確認しています",
+                    "question": condition,
+                    "need_input": True,
+                    "reasoning_chain": reasoning_chain,
+                    "available_questions": [],  # フローチャートモードでは質問の入れ替えは無効
+                    "current_rule": current_rule.name,
+                    "current_condition": condition_index + 1,
+                    "total_conditions": len(current_rule.conditions)
+                }
+
+        # すべての条件をチェック済み
+        # ルールが適用可能かチェック
+        if current_rule.check_conditions(self.status):
+            print(f"DEBUG: rule {current_rule.name} all conditions satisfied, applying rule")
+            return self.apply_rule(current_rule)
+        else:
+            print(f"DEBUG: rule {current_rule.name} conditions not satisfied, moving to next rule")
+            # 次のルールへ
+            self.current_rule_index += 1
+            return self.start_flowchart_deduce()
 
     def start_deduce(self) -> Dict[str, Any]:
         """
@@ -234,8 +363,15 @@ class Consultation:
                 "applied_rules": self.applied_rules
             }
         else:
+            # フローチャートモードの場合、ルールインデックスを進める
+            if self.flowchart_mode:
+                self.current_rule_index += 1
+
             # 次の推論ステップへ
-            return self.start_deduce()
+            if self.flowchart_mode:
+                return self.start_flowchart_deduce()
+            else:
+                return self.start_deduce()
 
     def _select_applicable_rules(self) -> List:
         """
@@ -580,6 +716,10 @@ class Consultation:
         self.evaluating_rules = set()  # 評価中ルールもリセット
         self.history_stack = []  # 履歴スタックもリセット
 
+        # フローチャートモードの状態もリセット
+        if self.flowchart_mode:
+            self.current_rule_index = 0
+
         # すべてのルールの flag をリセット
         for rule in self.collection_of_rules.values():
             rule.flag = "#fire"
@@ -599,6 +739,11 @@ class Consultation:
             "rule_flags": {rule_name: rule.flag for rule_name, rule in self.collection_of_rules.items()},
             "evaluating_rules": copy.deepcopy(self.evaluating_rules)
         }
+
+        # フローチャートモードの状態も保存
+        if self.flowchart_mode:
+            snapshot["current_rule_index"] = self.current_rule_index
+
         self.history_stack.append(snapshot)
 
     def go_back(self) -> Dict[str, Any]:
@@ -625,13 +770,20 @@ class Consultation:
         self.applied_rules = snapshot["applied_rules"]
         self.evaluating_rules = snapshot.get("evaluating_rules", set())
 
+        # フローチャートモードの状態も復元
+        if self.flowchart_mode and "current_rule_index" in snapshot:
+            self.current_rule_index = snapshot["current_rule_index"]
+
         # ルールのフラグを復元
         for rule_name, flag in snapshot["rule_flags"].items():
             if rule_name in self.collection_of_rules:
                 self.collection_of_rules[rule_name].flag = flag
 
         # 復元後に推論を実行して次の質問を取得
-        return self.start_deduce()
+        if self.flowchart_mode:
+            return self.start_flowchart_deduce()
+        else:
+            return self.start_deduce()
 
     def _build_reasoning_chain(self, current_question: str) -> List[Dict[str, Any]]:
         """

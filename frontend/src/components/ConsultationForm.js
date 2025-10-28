@@ -16,6 +16,7 @@ const ConsultationForm = () => {
   const [reasoningChain, setReasoningChain] = useState([]);  // 現在の推論チェーン
   const [availableQuestions, setAvailableQuestions] = useState([]);  // 回答可能な代替質問
   const [showQuestionSelector, setShowQuestionSelector] = useState(false);  // 質問選択UIの表示状態
+  const [currentRuleInfo, setCurrentRuleInfo] = useState(null);  // 現在評価中のルール情報（フローチャートモード）
 
   // 推論状態を取得する関数
   const fetchDebugInfo = async () => {
@@ -45,6 +46,16 @@ const ConsultationForm = () => {
         setCurrentQuestion(response.data.question);
         setReasoningChain(response.data.reasoning_chain || []);
         setAvailableQuestions(response.data.available_questions || []);
+        // フローチャートモード情報を保存
+        if (response.data.current_rule) {
+          setCurrentRuleInfo({
+            rule: response.data.current_rule,
+            condition: response.data.current_condition,
+            total: response.data.total_conditions
+          });
+        } else {
+          setCurrentRuleInfo(null);
+        }
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
         setAppliedRules(response.data.applied_rules || []);
@@ -84,6 +95,16 @@ const ConsultationForm = () => {
         setCurrentQuestion(response.data.question);
         setReasoningChain(response.data.reasoning_chain || []);
         setAvailableQuestions(response.data.available_questions || []);
+        // フローチャートモード情報を保存
+        if (response.data.current_rule) {
+          setCurrentRuleInfo({
+            rule: response.data.current_rule,
+            condition: response.data.current_condition,
+            total: response.data.total_conditions
+          });
+        } else {
+          setCurrentRuleInfo(null);
+        }
       } else if (response.data.status === 'completed') {
         setResults(response.data.results);
         setAppliedRules(response.data.applied_rules || []);
@@ -122,6 +143,7 @@ const ConsultationForm = () => {
       setDebugInfo({ findings: {}, hypotheses: {}, conflict_set: [], applied_rules: [] });
       setAvailableQuestions([]);
       setShowQuestionSelector(false);
+      setCurrentRuleInfo(null);
     } catch (error) {
       console.error('リセットに失敗しました:', error);
       alert('リセットに失敗しました。もう一度お試しください。');
@@ -471,6 +493,11 @@ const ConsultationForm = () => {
         <div className="question-card">
           <div className="progress-indicator">
             <span className="progress-count">質問 {questionHistory.length + 1}</span>
+            {currentRuleInfo && (
+              <span className="rule-progress">
+                ルール {currentRuleInfo.rule}: 条件 {currentRuleInfo.condition} / {currentRuleInfo.total}
+              </span>
+            )}
           </div>
 
           <h2>{currentQuestion}</h2>
@@ -492,8 +519,8 @@ const ConsultationForm = () => {
             </button>
           </div>
 
-          {/* 質問選択ボタン */}
-          {availableQuestions.length > 0 && (
+          {/* 質問選択ボタン（フローチャートモードでは非表示） */}
+          {availableQuestions.length > 0 && !currentRuleInfo && (
             <div className="question-selector-section">
               <button
                 className="btn btn-question-selector"

@@ -35,6 +35,9 @@ class ConsultationResponse(BaseModel):
     applied_rules: Optional[list] = None  # 適用されたルールの履歴
     reasoning_chain: Optional[list] = None  # 評価中のルールチェーン
     available_questions: Optional[list] = None  # 回答可能な代替質問のリスト
+    current_rule: Optional[str] = None  # フローチャートモード: 現在評価中のルール
+    current_condition: Optional[int] = None  # フローチャートモード: 現在の条件番号
+    total_conditions: Optional[int] = None  # フローチャートモード: 総条件数
     debug_pending_rules: Optional[list] = None  # デバッグ用
 
 
@@ -60,8 +63,8 @@ def start_consultation(request: StartRequest):
     else:
         rules = get_rules_by_visa_type(request.visa_type)
 
-    # 新しい診断セッションを作成
-    consultation_session = Consultation(rules)
+    # 新しい診断セッションを作成（フローチャートモード有効）
+    consultation_session = Consultation(rules, flowchart_mode=True)
 
     # 推論を開始
     result = consultation_session.start_up()
